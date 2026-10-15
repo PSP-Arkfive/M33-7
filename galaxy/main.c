@@ -26,8 +26,8 @@ const int module_sdk_version = 0x03060010;
 
 #define NOP	0x00000000
 
-#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a); 
-#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a); 
+#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a);
+#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a);
 
 #define MAKE_SYSCALL(a, n) _sw(SC_OPCODE | (n << 6), a);
 #define JUMP_TARGET(x) (0x80000000 | ((x & 0x03FFFFFF) << 2))
@@ -44,6 +44,7 @@ const int module_sdk_version = 0x03060010;
 	sceIoClose(fd);
 }*/
 
+int sceKernelSetQTGP3(void *data);
 
 SceUID mount_thread = -1;
 SceUID umdfd = -1;
@@ -57,7 +58,7 @@ int (* WaitMemStick)(void);
 int (* LockFdMutex)(void);
 int (* UnlockFdMutex)(void);
 
-static const u8 dummy_umd_id[16] = 
+static const u8 dummy_umd_id[16] =
 {
 	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
 	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
@@ -87,7 +88,7 @@ int OpenIso()
 	//Kprintf(umdfile);
 
 	while (1)
-	{	
+	{
 		umdfd = sceIoOpen(umdfile, PSP_O_RDONLY | 0x000f0000, 0);
 		if (umdfd > 0)
 		{
@@ -95,19 +96,19 @@ int OpenIso()
 				_sw(umdfd, text_addr + 0x5BC4);
 			else
 				_sw(umdfd, text_addr + 0x5BA4);
-		
+
 			cso = 0;
 			if (CisoOpen(umdfd) >= 0)
-				cso = 1;		
+				cso = 1;
 
 			discsize = GetDiscSize();
 			mounted = 1;
-			//Kprintf("Mounted succesfull, size %d\n", discsize);		
+			//Kprintf("Mounted succesfull, size %d\n", discsize);
 			return 0;
-		}		
+		}
 
 		sceKernelDelayThread(10000);
-	}	
+	}
 
 	//Kprintf("Mounted unsuccesfull.\n");
 	return -1;
@@ -152,7 +153,7 @@ int OpenUmdImage()
 
 	ClearCaches();
 
-	sceKernelSetQTGP3(dummy_umd_id);
+	sceKernelSetQTGP3((void *)dummy_umd_id);
 
 	return 0;
 }
@@ -193,10 +194,10 @@ int ReadUmdFile_(int *args)
 	void *buf = (void *)args[1];
 	int outsize = args[2];
 	int res;
-	
+
 	if (!cso)
 	{
-		res = ReadUmdFileRetry(buf, outsize, offset);	
+		res = ReadUmdFileRetry(buf, outsize, offset);
 	}
 	else
 	{
@@ -209,7 +210,7 @@ int ReadUmdFile_(int *args)
 int ReadUmdFile(int offset, void *buf, int outsize)
 {
 	int res;
-	
+
 	LockFdMutex();
 
 	g_args[0] = offset;
@@ -218,7 +219,7 @@ int ReadUmdFile(int offset, void *buf, int outsize)
 
 	res = sceKernelExtendKernelStack(0x2000, (void *)ReadUmdFile_, g_args);
 
-	UnlockFdMutex();	
+	UnlockFdMutex();
 
 	return res;
 }
@@ -226,7 +227,7 @@ int ReadUmdFile(int offset, void *buf, int outsize)
 int sceIoClosePatched(SceUID fd)
 {
 	int res = sceIoClose(fd);
-	
+
 	if (fd == umdfd)
 	{
 		umdfd = -1;
@@ -245,7 +246,7 @@ SceUID sceKernelCreateThreadPatched(const char *name, SceKernelThreadEntry entry
                              int stackSize, SceUInt attr, SceKernelThreadOptParam *option)
 {
 	SceUID res = sceKernelCreateThread(name, entry, initPriority, stackSize, attr, option);
-	
+
 	if (strncmp(name, "SceNpUmdMount", 13) == 0)
 	{
 		mount_thread = res;
@@ -291,16 +292,16 @@ int sceKernelStartThreadPatched(SceUID thid, SceSize arglen, void *argp)
 
 int module_start(SceSize args, void *argp)
 {
-	SceModule2 *mod;
-	
-	mod = sceKernelFindModuleByName("sceThreadManager");	
+	SceModule *mod;
+
+	mod = sceKernelFindModuleByName("sceThreadManager");
 	_sw((u32)sceKernelCreateThreadPatched, mod->text_addr + 0x17DEC);
 	_sw((u32)sceKernelStartThreadPatched, mod->text_addr + 0x17F88);
 
 	ClearCaches();
 
 	while (1)
-	{	
+	{
 		SceUID fd = sceIoOpen(GetUmdFile(), PSP_O_RDONLY, 0);
 		if (fd >= 0)
 		{
