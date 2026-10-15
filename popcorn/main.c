@@ -19,8 +19,8 @@ const int module_sdk_version = 0x03060010;
 
 #define NOP	0x00000000
 
-#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a); 
-#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a); 
+#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a);
+#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a);
 
 #define MAKE_SYSCALL(a, n) _sw(SC_OPCODE | (n << 6), a);
 #define JUMP_TARGET(x) (0x80000000 | ((x & 0x03FFFFFF) << 2))
@@ -57,7 +57,7 @@ int ReadFile(char *file, void *buf, int size)
 
 void RebootVSHWithError(u32 error)
 {
-	struct SceKernelLoadExecVSHParam param;	
+	struct SceKernelLoadExecVSHParam param;
 	u32 vshmain_args[0x20/4];
 
 	memset(&param, 0, sizeof(param));
@@ -79,14 +79,14 @@ void RebootVSHWithError(u32 error)
 
 STMOD_HANDLER previous = NULL;
 
-int OnModuleStart(SceModule2 *mod)
+int OnModuleStart(SceModule *mod)
 {
 	if (strcmp(mod->modname, "pops") == 0)
 	{
 		// New patch hash check (3.71+)
 		// Nullify comparison with 0 (0 = bad here)
 		_sw(0x5000FFE3, mod->text_addr + 0xE9AC);
-		
+
 		// Use our decompression function
 		u32 x = _lw(mod->text_addr + 0x16A08);
 		_sw(x, mod->text_addr + 0xE90C);
@@ -109,8 +109,6 @@ int OnModuleStart(SceModule2 *mod)
 	return previous(mod);
 }
 
-int sceKernelDeflateDecompress(u8 *dest, u32 destSize, const u8 *src, u32 unknown);
-
 int scePopsManExitVSHKernelPatched(u32 destSize, const u8 *src, u8 *dest)
 {
 	int k1 = pspSdkSetK1(0);
@@ -131,13 +129,13 @@ int scePopsManExitVSHKernelPatched(u32 destSize, const u8 *src, u8 *dest)
 		return sizeof(icon);
 	}
 
-	res = sceKernelDeflateDecompress(dest, destSize, src, 0);	
+	res = sceKernelDeflateDecompress(dest, destSize, src, 0);
 
 	if (res == 0x9300)
 	{
-		res = 0x92FF;		
+		res = 0x92FF;
 	}
-	
+
 	pspSdkSetK1(k1);
 	return res;
 }
@@ -157,9 +155,9 @@ int OpenEncryptedPatched(char *path, void *keys, int flags, int filemode, int of
 	if (signature != 0x44475000)
 	{
 		sceIoLseek(fd, offset, PSP_SEEK_SET);
-		return fd;		
+		return fd;
 	}
-	
+
 	sceIoClose(fd);
 	fd = sceIoOpen(path, flags | 0x40000000, filemode);
 
@@ -186,7 +184,7 @@ int OpenEncryptedPatched(char *path, void *keys, int flags, int filemode, int of
 int sceIoReadPatched(SceUID fd, u8 *buf, int size)
 {
 	int res = sceIoRead(fd, buf, size);
-	
+
 	if (res == size)
 	{
 		if (buf[0x41B] == 0x27)
@@ -202,14 +200,14 @@ int module_start(SceSize args, void *argp)
 	int pos, icon_pos, original = 0;
 
 	char *filename = sceKernelInitFileName();
-	
+
 	SceUID fd = sceIoOpen(filename, PSP_O_RDONLY, 0);
 
 	if (fd < 0)
 		return 1;
 
 	sceIoRead(fd, header, 0x28);
-	
+
 	pos = header[9];
 	icon_pos = header[3];
 	sceIoLseek(fd, pos, PSP_SEEK_SET);
@@ -247,8 +245,8 @@ int module_start(SceSize args, void *argp)
 	}
 
 	sceIoClose(fd);
-	
-	SceModule2 *mod = sceKernelFindModuleByName("scePops_Manager");
+
+	SceModule *mod = sceKernelFindModuleByName("scePops_Manager");
 
 	// Bypass npdrm check
 	_sw(0, mod->text_addr + 0x158);
@@ -258,9 +256,9 @@ int module_start(SceSize args, void *argp)
 		ClearCaches();
 		return 1;
 	}
-	
+
 	previous = sctrlHENSetStartModuleHandler(OnModuleStart);
-		
+
 	int (* SetCompiledSdkVersion)(int) = (void *)sctrlHENFindFunction("sceSystemMemoryManager", "SysMemUserForUser", 0x315AD3A0);
 	if (!SetCompiledSdkVersion)
 	{
@@ -268,13 +266,13 @@ int module_start(SceSize args, void *argp)
 	}
 
 	SetCompiledSdkVersion(0x03090010);
-	
+
 	_sw(0, mod->text_addr + 0x158C);
-			
+
 	REDIRECT_FUNCTION(mod->text_addr + 0x162C, scePopsManExitVSHKernelPatched);
 	REDIRECT_FUNCTION(mod->text_addr + 0x6A8, OpenEncryptedPatched);
 	REDIRECT_FUNCTION(mod->text_addr + 0xCA0, OpenEncryptedPatched);
-	
+
 	_sw(0, mod->text_addr + 0x378); // New patch beginning at 3.52 avoid amctrl calls
 	_sw(0, mod->text_addr + 0xA80); // Patch pgd signature check
 
@@ -282,12 +280,12 @@ int module_start(SceSize args, void *argp)
 	_sw(0, mod->text_addr + 0xE2C);
 	_sw(0, mod->text_addr + 0xECC);
 	_sw(0, mod->text_addr + 0x1100);
-	_sw(0, mod->text_addr + 0x1354);	
+	_sw(0, mod->text_addr + 0x1354);
 
 	// New patch since 3.90, to patch sound issue in Castlevania
 	REDIRECT_FUNCTION(mod->text_addr + 0x2788, sceIoReadPatched);
 
-	ClearCaches();	
+	ClearCaches();
 
 	return 0;
 }
