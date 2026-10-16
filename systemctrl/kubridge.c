@@ -20,7 +20,7 @@ SceUID kuKernelLoadModule(const char *path, int flags, SceKernelLMOption *option
 SceUID kuKernelLoadModuleWithApitype2(int apitype, const char *path, int flags, SceKernelLMOption *option)
 {
 	int k1 = pspSdkSetK1(0);
-	int res = sceKernelLoadModuleForLoadExecForUser(apitype, path, flags, option);
+	int res = sceKernelLoadModuleWithApitype2(apitype, path, flags, option);
 	pspSdkSetK1(k1);
 
 	return res;

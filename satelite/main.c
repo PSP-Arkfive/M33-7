@@ -2,7 +2,7 @@
 #include <pspuser.h>
 #include <pspctrl.h>
 #include <pspdisplay.h>
-#include <psppaf.h>
+// #include <psppaf.h>
 #include <psppower.h>
 
 #include <systemctrl_se.h>
@@ -76,9 +76,9 @@ static void button_func(void)
 		if (!inited)
 		{
 			int i;
-			
+
 			GetVideoIsos(&videoisos, &nvideoisos);
-			
+
 			for (i = 0; i < nvideoisos; i++)
 			{
 				if (paf_memcmp(videoiso_sel, videoisos[i].filename, paf_strlen(videoisos[i].filename)) == 0)
@@ -93,7 +93,7 @@ static void button_func(void)
 		else
 		{
 			int res = menu_ctrl(cur_buttons, button_on);
-			if (res == 0) 
+			if (res == 0)
 			{
 				menu_mode = 2;
 			}
@@ -148,9 +148,9 @@ int vshmenu_thread(SceSize args, void *argp)
 	while(1)
 	{
 		sceDisplayWaitVblankStart();
-		
+
 		// stop request
-		if(stopit) 
+		if(stopit)
 			break;
 
 		if (inited == 1)
@@ -163,7 +163,7 @@ int vshmenu_thread(SceSize args, void *argp)
 			menu_draw();
 			menu_setup(&config, videoisos, nvideoisos, &selected);
 		}
-		
+
 		button_func();
 	}
 
@@ -172,12 +172,12 @@ int vshmenu_thread(SceSize args, void *argp)
 
 	if (stopit == 2)
 	{
-		scePowerRequestStandby();		
+		scePowerRequestStandby();
 	}
 
 	if (stopit == 3)
 	{
-		scePowerRequestColdReset(0);		
+		scePowerRequestColdReset(0);
 	}
 
 	int  disctype = 0;
@@ -189,7 +189,7 @@ int vshmenu_thread(SceSize args, void *argp)
 		p = buf;
 		disctype = videoisos[selected].disctype;
 	}
-	
+
 	vctrlVSHExitVSHMenu(&config, p, disctype);
 	return sceKernelExitDeleteThread(0);
 }
@@ -210,12 +210,12 @@ int module_start(SceSize args, void *argp)
 			}
 		}
 	}
-	
+
 	thid = sceKernelCreateThread("VshMenu_Thread", vshmenu_thread, 0x10, 0x1000, 0, 0);
-	
+
 	if(thid >= 0)
 		sceKernelStartThread(thid, 0, 0);
-	
+
 	return 0;
 }
 

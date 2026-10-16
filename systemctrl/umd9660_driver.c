@@ -22,6 +22,8 @@
 #include "csoread.h"
 #include "pspmediaman.h"
 
+int sceKernelSetQTGP3(const u8 *data);
+
 char umdfile[72];
 SceUID umdsema = -1;
 SceUID umdfd = -1;
@@ -79,14 +81,14 @@ int Umd9660ReadSectors_()
 
 	if (!cso)
 	{
-		return IsofileReadSectors(params.lba, params.nsectors, params.buf);		
+		return IsofileReadSectors(params.lba, params.nsectors, params.buf);
 	}
-	
+
 	return CisofileReadSectors(params.lba, params.nsectors, params.buf);
 }
 
 int Umd9660ReadSectors2(int lba, int nsectors, void *buf)
-{	
+{
 	if (!mounted)
 	{
 		int i;
@@ -107,9 +109,9 @@ int Umd9660ReadSectors2(int lba, int nsectors, void *buf)
 
 	if (!cso)
 	{
-		return IsofileReadSectors(lba, nsectors, buf);		
+		return IsofileReadSectors(lba, nsectors, buf);
 	}
-	
+
 	return CisofileReadSectors(lba, nsectors, buf);
 }
 
@@ -118,7 +120,7 @@ int Umd9660ReadSectors(int lba, int nsectors, void *buf)
 	params.lba = lba;
 	params.nsectors = nsectors;
 	params.buf = buf;
-	
+
 	return sceKernelExtendKernelStack(0x2000, (void *)Umd9660ReadSectors_, NULL);
 }
 
@@ -140,13 +142,13 @@ int OpenIso()
 {
 	mounted = 0;
 	sceIoClose(umdfd);
-	
+
 	umdfd = sceIoOpen(umdfile, PSP_O_RDONLY | 0x000f0000, 0);
 	if (umdfd >= 0)
 	{
 		cso = 0;
 		if (CisoOpen(umdfd) >= 0)
-			cso = 1;		
+			cso = 1;
 
 		discsize = GetDiscSize();
 		lastLBA = -1;
@@ -196,10 +198,10 @@ void ReadOneSector(int lba)
 
 int umd_init(SceIoDeviceEntry* de)
 {
-	if (!umdsector)	
+	if (!umdsector)
 	{
-		umdsector = (u8 *)malloc(SECTOR_SIZE);	
-	
+		umdsector = (u8 *)malloc(SECTOR_SIZE);
+
 		if (!umdsector)
 		{
 			return -1;
@@ -222,7 +224,7 @@ int umd_init(SceIoDeviceEntry* de)
 int umd_exit(SceIoDeviceEntry* de)
 {
 	sceKernelWaitSema(umdsema, 1, NULL);
-	
+
 	if (umdsector)
 	{
 		free(umdsector);
@@ -232,7 +234,7 @@ int umd_exit(SceIoDeviceEntry* de)
 	if (umdsema >= 0)
 	{
 		sceKernelDeleteSema(umdsema);
-		umdsema = -1;		
+		umdsema = -1;
 	}
 
 	return 0;
@@ -241,7 +243,7 @@ int umd_exit(SceIoDeviceEntry* de)
 int umd_open(SceIoIob *iob, char *file, int flags, SceMode mode)
 {
 	int i;
-	
+
 	sceKernelWaitSema(umdsema, 1, NULL);
 
 	for (i = 0; i < 0x10; i++)
@@ -258,9 +260,9 @@ int umd_open(SceIoIob *iob, char *file, int flags, SceMode mode)
 		return SCE_ERROR_ERRNO_ENODEV;
 	}
 
-	iob->i_private = 0;
-	discpointer = 0;	
-	
+	iob->arg = 0;
+	discpointer = 0;
+
 	sceKernelSignalSema(umdsema, 1);
 	return 0;
 }
@@ -299,7 +301,7 @@ SceOff umd_lseek(SceIoIob *iob, SceOff ofs, int whence)
 		discpointer = ofs;
 	}
 	else if (whence == PSP_SEEK_CUR)
-	{		
+	{
 		discpointer += ofs;
 	}
 	else if (whence == PSP_SEEK_END)
@@ -328,9 +330,9 @@ int umd_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *ou
 	if (cmd != 0x01d20001)
 	{
 		sceKernelSignalSema(umdsema, 1);
-		return -1;	
+		return -1;
 	}
-	
+
 	outdata32[0] = discpointer;
 	sceKernelSignalSema(umdsema, 1);
 
@@ -348,8 +350,8 @@ int umd_devctl(SceIoIob *iob, const char *devname, unsigned int cmd, void *indat
 		case 0x01f20001: /* get disc type */
 		{
 			outdata32[1] = SCE_UMD_FMT_GAME; /* game */
-			outdata32[0] = 0xFFFFFFFF; 
-			
+			outdata32[0] = 0xFFFFFFFF;
+
 			sceKernelSignalSema(umdsema, 1);
 			return 0;
 		}
@@ -372,8 +374,8 @@ int umd_devctl(SceIoIob *iob, const char *devname, unsigned int cmd, void *indat
 	return -1;
 }
 
-SceIoDeviceFunction umd_funcs = 
-{ 
+SceIoDeviceFunction umd_funcs =
+{
 	umd_init,
 	umd_exit,
 	umd_open,
@@ -406,7 +408,7 @@ SceIoDeviceTable *getumd9660_driver()
 	return &umd_driver;
 }
 
-static const u8 dummy_umd_id[16] = 
+static const u8 dummy_umd_id[16] =
 {
 	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
 	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
@@ -431,7 +433,7 @@ static int *sceUmdManGetUmdDiscInfoPatched()
 		lp[0x74/4] = result;            // 24
 		lp[0x80/4] = 1;                 // ?
 		lp[0x84/4] = 1;                 // ?
-	}	
+	}
 
 	return lp;
 }
@@ -439,8 +441,8 @@ static int *sceUmdManGetUmdDiscInfoPatched()
 static int UmdRead_secbuf(int lba)
 {
 	int result;
-	
-	if(lba != lastLBA)	
+
+	if(lba != lastLBA)
 	{
 		result = Umd9660ReadSectors2(lba, 1, umdsector); //UmdRead(iso_sector_buf,lba,0x800);
 		if(result < 0)
@@ -567,7 +569,7 @@ int sctrlSEUmountUmd()
 {
 	int k1 = pspSdkSetK1(0);
 	int i;
-	
+
 	if (!mounted)
 	{
 		pspSdkSetK1(k1);
@@ -578,7 +580,7 @@ int sctrlSEUmountUmd()
 
 	discout = 1;
 
-	sceKernelSetQTGP3(dummy_umd_id);	
+	sceKernelSetQTGP3(dummy_umd_id);
 
 	sceKernelCallSubIntrHandler(0x04, 0x1a, 0, 0);
 	sceKernelDelayThread(50000);
@@ -600,7 +602,7 @@ int sctrlSEUmountUmd()
 
 static void GpioPatch()
 {
-	// using old nid	
+	// using old nid
 	u32 *gpioread = (u32 *)FindProc("sceLowIO_Driver", "sceGpio_driver", 0x4250D44A);
 	address[4] = (u32)gpioread;
 	restore[4] = gpioread[0];
@@ -612,7 +614,7 @@ static void GpioPatch()
 void sctrlSESetDiscOut(int out)
 {
 	int k1 = pspSdkSetK1(0);
-	
+
 	GpioPatch();
 	ClearCaches();
 
@@ -634,7 +636,7 @@ void DoAnyUmd()
 	umd_init(NULL);
 	sceKernelSetQTGP3(dummy_umd_id);
 
-	SceModule2 *mod = sceKernelFindModuleByName("sceUmd9660_driver");
+	SceModule *mod = sceKernelFindModuleByName("sceUmd9660_driver");
 	if (!mod)
 		return;
 
@@ -661,11 +663,11 @@ void DoAnyUmd()
 
 	if (address[4] == 0)
 		GpioPatch();
-	
+
 	discout = 0;
-	
+
 	ClearCaches();
-	
+
 	sceKernelCallSubIntrHandler(0x04,0x1a,0,0);
 	sceKernelDelayThread(50000);
 }

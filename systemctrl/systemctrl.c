@@ -13,8 +13,8 @@ int sctrlKernelSetUserLevel(int level)
 {
 	int k1 = pspSdkSetK1(0);
 	int res = sceKernelGetUserLevel();
-	
-	SceModule2 *mod = sceKernelFindModuleByName("sceThreadManager");
+
+	SceModule *mod = sceKernelFindModuleByName("sceThreadManager");
 	u32 *thstruct;
 
 	thstruct = (u32 *)_lw(mod->text_addr + 0x18D40);
@@ -91,7 +91,7 @@ int sctrlKernelLoadExecVSHMs1(const char *file, struct SceKernelLoadExecVSHParam
 
 int sctrlKernelLoadExecVSHMs2(const char *file, struct SceKernelLoadExecVSHParam *param)
 {
-	int k1 = pspSdkSetK1(0);	
+	int k1 = pspSdkSetK1(0);
 	int res = sceKernelLoadExecVSHMs2(file, param);
 	pspSdkSetK1(k1);
 
@@ -100,7 +100,7 @@ int sctrlKernelLoadExecVSHMs2(const char *file, struct SceKernelLoadExecVSHParam
 
 int sctrlKernelLoadExecVSHMs3(const char *file, struct SceKernelLoadExecVSHParam *param)
 {
-	int k1 = pspSdkSetK1(0);	
+	int k1 = pspSdkSetK1(0);
 	int res = sceKernelLoadExecVSHMs3(file, param);
 	pspSdkSetK1(k1);
 
@@ -109,7 +109,7 @@ int sctrlKernelLoadExecVSHMs3(const char *file, struct SceKernelLoadExecVSHParam
 
 int sctrlKernelLoadExecVSHMs4(const char *file, struct SceKernelLoadExecVSHParam *param)
 {
-	int k1 = pspSdkSetK1(0);	
+	int k1 = pspSdkSetK1(0);
 	int res = sceKernelLoadExecVSHMs4(file, param);
 	pspSdkSetK1(k1);
 
@@ -119,7 +119,7 @@ int sctrlKernelLoadExecVSHMs4(const char *file, struct SceKernelLoadExecVSHParam
 int sctrlKernelLoadExecVSHWithApitype(int apitype, const char *file, struct SceKernelLoadExecVSHParam *param)
 {
 	int k1 = pspSdkSetK1(0);
-	SceModule2 *mod = sceKernelFindModuleByName("sceLoadExec");
+	SceModule *mod = sceKernelFindModuleByName("sceLoadExec");
 	int (* LoadExecVSH)(int apitype, const char *file, struct SceKernelLoadExecVSHParam *param, int unk2) = (void *)(mod->text_addr + 0x1E58);
 	int res = LoadExecVSH(apitype, file, param, 0x10000);
 	pspSdkSetK1(k1);
@@ -138,7 +138,7 @@ int sctrlKernelExitVSH(struct SceKernelLoadExecVSHParam *param)
 
 static void PatchIsofsDriver2()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceIsofs_driver");
+	SceModule *mod = sceKernelFindModuleByName("sceIsofs_driver");
 	if (mod)
 	{
 		_sw(0x03e00008, mod->text_addr + 0x4390);
@@ -189,7 +189,7 @@ int sctrlSEMountUmdFromFile(char *file, int noumd, int isofs)
 SceIoDeviceTable *sctrlHENFindDriver(char *drvname)
 {
 	int k1 = pspSdkSetK1(0);
-	SceModule2 *mod = sceKernelFindModuleByName("sceIOFileManager");
+	SceModule *mod = sceKernelFindModuleByName("sceIOFileManager");
 	u32 text_addr = mod->text_addr;
 
 	u32 *(* GetDevice)(char *) = (void *)(text_addr + 0x2838);

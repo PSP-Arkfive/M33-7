@@ -57,14 +57,14 @@ typedef struct
 
 int isofs_init(SceIoDeviceEntry* arg);
 int isofs_fastinit();
-int isofs_exit(SceIoDeviceEntry* arg); 
+int isofs_exit(SceIoDeviceEntry* arg);
 int isofs_reset();
-int isofs_open(SceIoIob *arg, char *fullpath, int flags, SceMode mode); 
+int isofs_open(SceIoIob *arg, char *fullpath, int flags, SceMode mode);
 int isofs_close(SceIoIob *arg);
 int isofs_read(SceIoIob *arg, char *data, int len);
 SceOff isofs_lseek(SceIoIob *arg, SceOff ofs, int whence);
 int isofs_getstat(SceIoIob *arg, const char *file, SceIoStat *stat);
-int isofs_dopen(SceIoIob *arg, const char *dirname); 
+int isofs_dopen(SceIoIob *arg, const char *dirname);
 int isofs_dclose(SceIoIob *arg);
 int isofs_dread(SceIoIob *arg, SceIoDirent *dir);
 int isofs_ioctl(SceIoIob *arg, unsigned int cmd, void *indata, int inlen, void *outdata, int outlen);

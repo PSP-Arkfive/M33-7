@@ -50,7 +50,7 @@ void UmdNormalizeName(char *filename)
 int SizeToSectors(int size)
 {
 	int len = size / SECTOR_SIZE;
-	
+
 	if ((size & 0x7FF) != 0)
 	{
 		len++;
@@ -78,14 +78,14 @@ int GetPathAndName(char *fullpath, char *path, char *filename)
 	char fullpath2[256];
 
 	strcpy(fullpath2, fullpath);
-	
+
 	if (fullpath2[strlen(fullpath2)-1] == '/')
 	{
 		fullpath2[strlen(fullpath2)-1] = 0;
 	}
 
 	char *p = strrchr(fullpath2, '/');
-	
+
 	if (!p)
 	{
 		if (strlen(fullpath2)+1 > 32)
@@ -97,7 +97,7 @@ int GetPathAndName(char *fullpath, char *path, char *filename)
 		memset(path, 0, 256);
 		UmdNormalizeName(fullpath2);
 		strcpy(filename, fullpath2);
-		
+
 		return 0;
 	}
 
@@ -116,7 +116,7 @@ int GetPathAndName(char *fullpath, char *path, char *filename)
 		strcpy(path, fullpath2);
 
 	UmdNormalizeName(filename);
-	
+
 	return 0;
 }
 
@@ -124,7 +124,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 {
 	Iso9660DirectoryRecord *record;
 	char name[32];
-	u8 *p; 
+	u8 *p;
 	int oldDirLen = 0;
 	int pos, res;
 	int remaining = 0;
@@ -133,14 +133,14 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 
 	if (SizeToSectors(dirSize) <= 8)
 	{
-		res = IsofsReadSectors(lba, SizeToSectors(dirSize), sectors);	
+		res = IsofsReadSectors(lba, SizeToSectors(dirSize), sectors);
 	}
 	else
 	{
 		remaining = SizeToSectors(dirSize) - 8;
 		res = IsofsReadSectors(lba, 8, sectors);
 	}
-	
+
 	if (res < 0)
 	{
 		return res;
@@ -148,7 +148,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 
 	p = sectors;
 	record = (Iso9660DirectoryRecord *)p;
-	
+
 	while (1)
 	{
 		if (record->len_dr == 0)
@@ -156,7 +156,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 			if (SECTOR_SIZE - (pos & 0x7FF) <= oldDirLen)
 			{
 				p += (SECTOR_SIZE - (pos & 0x7FF));
-				pos += (SECTOR_SIZE - (pos & 0x7FF));				
+				pos += (SECTOR_SIZE - (pos & 0x7FF));
 				record = (Iso9660DirectoryRecord *)p;
 
 				if (record->len_dr == 0)
@@ -168,7 +168,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 			else
 			{
 				return SCE_ERROR_ERRNO_ENOENT;
-			}		
+			}
 		}
 
 		if (record->len_fi > 32)
@@ -208,7 +208,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 					{
 						return SCE_ERROR_ERRNO_ENOTDIR;
 					}
-				}				
+				}
 
 				memcpy(retRecord, record, sizeof(Iso9660DirectoryRecord));
 				return record->lsbStart;
@@ -219,7 +219,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 		p += record->len_dr;
 		oldDirLen = record->len_dr;
 		record = (Iso9660DirectoryRecord *)p;
-		
+
 		if (remaining > 0)
 		{
 			int offset = (p - sectors);
@@ -233,7 +233,7 @@ int FindFileLBA(char *filename, int lba, int dirSize, int isDir, Iso9660Director
 				{
 					return res;
 				}
-				
+
 				if (offset >= (8*SECTOR_SIZE))
 				{
 					remaining -= 8;
@@ -258,10 +258,10 @@ int FindPathLBA(char *path, Iso9660DirectoryRecord *retRecord)
 	char curdir[32];
 	int lba;
 	int level = 0;
-	
-	lba = main_record.lsbStart;	
+
+	lba = main_record.lsbStart;
 	memcpy(retRecord, &main_record, sizeof(Iso9660DirectoryRecord));
-	
+
 	p = strchr(path, '/');
 	curpath = path;
 
@@ -292,16 +292,16 @@ int FindPathLBA(char *path, Iso9660DirectoryRecord *retRecord)
 		{
 			return SCE_ERROR_ERRNO_EINVAL;
 		}
-		
+
 		lba = FindFileLBA(curdir, lba, retRecord->lsbDataLength, 1, retRecord);
 
 		if (lba < 0)
 			return lba;
-		
+
 		curpath = p+1;
-		p = strchr(curpath, '/');		
+		p = strchr(curpath, '/');
 	}
-	
+
 	return lba;
 }
 
@@ -328,18 +328,18 @@ int isofs_init(SceIoDeviceEntry* arg)
 	{
 		return res;
 	}
-	
+
 	if (memcmp(sectors+1, "CD001", 5) != 0)
 	{
 		return SCE_ERROR_ERRNO_EINVAL;
-	}	
+	}
 
 	memcpy(&main_record, sectors+0x9C, sizeof(Iso9660DirectoryRecord));
 	memset(handlers, 0, sizeof(handlers));
 
 	g_lastLBA = -1;
-	g_lastReadSize = 0;	
-	
+	g_lastReadSize = 0;
+
 	return 0;
 }
 
@@ -363,20 +363,20 @@ int isofs_fastinit()
 	{
 		return isofs_sema;
 	}
-	
+
 	return 0;
 }
 
 int isofs_exit(SceIoDeviceEntry* arg)
 {
 	g_lastLBA = -1;
-	g_lastReadSize = 0;	
-	
+	g_lastReadSize = 0;
+
 	if (isofs_sema >= 0)
 	{
-		sceKernelWaitSema(isofs_sema, 1, NULL);	
+		sceKernelWaitSema(isofs_sema, 1, NULL);
 	}
-	
+
 	if (sectors)
 	{
 		free(sectors);
@@ -399,7 +399,7 @@ int isofs_exit2(SceIoDeviceEntry* arg)
 
 int isofs_reset()
 {
-	sceKernelWaitSema(isofs_sema, 1, NULL);	
+	sceKernelWaitSema(isofs_sema, 1, NULL);
 
 	memset(&main_record, 0, sizeof(Iso9660DirectoryRecord));
 	memset(handlers, 0, sizeof(handlers));
@@ -407,14 +407,14 @@ int isofs_reset()
 	g_lastLBA = -1;
 	g_lastReadSize = 0;
 
-	sceKernelSignalSema(isofs_sema, 1);	
+	sceKernelSignalSema(isofs_sema, 1);
 
 	return 0;
 }
 
 typedef struct
 {
-	SceIoIob *iob; 
+	SceIoIob *iob;
 	char *file;
 	int flags;
 	SceMode mode;
@@ -426,11 +426,11 @@ int isofs_open2()
 {
 	Iso9660DirectoryRecord record;
 	char fullpath[256], path[256], filename[32];
-	
+
 	int res, lba, i;
 	int notallowedflags = PSP_O_WRONLY | PSP_O_APPEND | PSP_O_CREAT | PSP_O_TRUNC | PSP_O_EXCL;
-	
-	//sceKernelWaitSema(isofs_sema, 1, NULL);	
+
+	//sceKernelWaitSema(isofs_sema, 1, NULL);
 	//Kprintf("Open %s\n", open_params.file);
 
 	//Kprintf("isofs_open %s\n", file);
@@ -439,7 +439,7 @@ int isofs_open2()
 	{
 		//sceKernelSignalSema(isofs_sema, 1);
 		return SCE_ERROR_ERRNO_EINVAL;
-	}	
+	}
 
 	if (strcmp(open_params.file, "/") == 0)
 	{
@@ -456,7 +456,7 @@ int isofs_open2()
 		handlers[i].filepointer = 0;
 		handlers[i].attributes = main_record.fileFlags;
 
-		open_params.iob->i_private = (void *)i;
+		open_params.iob->arg = (void *)i;
 
 		//sceKernelSignalSema(isofs_sema, 1);
 		return 0;
@@ -472,62 +472,62 @@ int isofs_open2()
 
 	if (strlen(fullpath)+1 > 256)
 	{
-		// path too big for ISO9660 
+		// path too big for ISO9660
 		//sceKernelSignalSema(isofs_sema, 1);
 		//Kprintf("Error open 1 %s\n", open_params.file);
 		return SCE_ERROR_ERRNO_ENAMETOOLONG;
 	}
-	
-	if (open_params.iob->i_unit >= 1)
+
+	if (open_params.iob->fs_num >= 1)
 	{
 		//sceKernelSignalSema(isofs_sema, 1);
 		//Kprintf("Error open 2 %s\n", open_params.file);
 		return SCE_ERROR_ERRNO_EINVAL;
 	}
-	
+
 	if (open_params.flags & notallowedflags)
 	{
 		//sceKernelSignalSema(isofs_sema, 1);
 		//Kprintf("Error open 3 %s\n", open_params.file);
 		return SCE_ERROR_ERRNO_EFLAG;
-	}	
+	}
 
 	if (strncmp(fullpath, "/sce_lbn", 8) != 0)
 	{
 		if ((res = GetPathAndName(fullpath, path, filename)) < 0)
 		{
-			//sceKernelSignalSema(isofs_sema, 1);			
+			//sceKernelSignalSema(isofs_sema, 1);
 			return res;
 		}
 
 		if (path[0])
 		{
-			lba = FindPathLBA(path, &record);		 
+			lba = FindPathLBA(path, &record);
 		}
 		else
 		{
 			memcpy(&record, &main_record, sizeof(Iso9660DirectoryRecord));
-			lba = record.lsbStart;		
+			lba = record.lsbStart;
 		}
 
 		if (lba < 0)
 		{
-			//sceKernelSignalSema(isofs_sema, 1);				
+			//sceKernelSignalSema(isofs_sema, 1);
 			return lba;
 		}
 
 		lba =  FindFileLBA(filename, lba, record.lsbDataLength, 0, &record);
 		if (lba < 0)
 		{
-			//sceKernelSignalSema(isofs_sema, 1);	
+			//sceKernelSignalSema(isofs_sema, 1);
 			//Kprintf("Error open lba %s\n", open_params.file);
 			return lba;
 		}
-		
+
 		i = GetFreeHandle();
 		if (i < 0)
 		{
-			//sceKernelSignalSema(isofs_sema, 1);	
+			//sceKernelSignalSema(isofs_sema, 1);
 			//Kprintf("Error open free %s\n", open_params.file);
 			return i;
 		}
@@ -536,7 +536,7 @@ int isofs_open2()
 		handlers[i].lba = lba;
 		handlers[i].filesize = record.lsbDataLength;
 		handlers[i].filepointer = 0;
-		handlers[i].attributes = record.fileFlags;	
+		handlers[i].attributes = record.fileFlags;
 	}
 	else
 	{
@@ -544,12 +544,12 @@ int isofs_open2()
 		char str[11];
 		char *p;
 		int  size;
-		
+
 		p = strstr(fullpath, "_size");
 
 		if (!p)
 		{
-			//sceKernelSignalSema(isofs_sema, 1);	
+			//sceKernelSignalSema(isofs_sema, 1);
 			//Kprintf("Error open a %s\n", open_params.file);
 			return SCE_ERROR_ERRNO_EINVAL;
 		}
@@ -563,7 +563,7 @@ int isofs_open2()
 
 		memset(str, 0, 11);
 		strncpy(str, fullpath+8, p-(fullpath+8));
-		
+
 		lba = strtol(str, NULL, 0);
 		if (lba < 0)
 		{
@@ -602,26 +602,26 @@ int isofs_open2()
 		handlers[i].lba = lba;
 		handlers[i].filesize = size;
 		handlers[i].filepointer = 0;
-		handlers[i].attributes = 0x01;		
+		handlers[i].attributes = 0x01;
 
 		//Kprintf("lba opened %08X\n", lba);
 	}
 
-	open_params.iob->i_private = (void *)i;
-	
+	open_params.iob->arg = (void *)i;
+
 	//sceKernelSignalSema(isofs_sema, 1);
 	return 0;
 }
 
 int isofs_open(SceIoIob *iob, char *file, int flags, SceMode mode)
 {
-	sceKernelWaitSema(isofs_sema, 1, NULL);	
+	sceKernelWaitSema(isofs_sema, 1, NULL);
 
 	open_params.iob = iob;
 	open_params.file = file;
 	open_params.flags = flags;
 	open_params.mode = mode;
-	
+
 	int res = sceKernelExtendKernelStack(0x1800, (void *)isofs_open2, NULL);
 
 	sceKernelSignalSema(isofs_sema, 1);
@@ -630,10 +630,10 @@ int isofs_open(SceIoIob *iob, char *file, int flags, SceMode mode)
 
 int isofs_close(SceIoIob *iob)
 {
-	SceUID fd = (SceUID)iob->i_private;
+	SceUID fd = (SceUID)iob->arg;
 
 	sceKernelWaitSema(isofs_sema, 1, NULL);
-	
+
 	if (fd < 0 || fd >= MAX_HANDLERS)
 	{
 		sceKernelSignalSema(isofs_sema, 1);
@@ -645,9 +645,9 @@ int isofs_close(SceIoIob *iob)
 		sceKernelSignalSema(isofs_sema, 1);
 		return SCE_ERROR_ERRNO_EBADF;
 	}
-	
+
 	handlers[fd].opened = 0;
-	
+
 	sceKernelSignalSema(isofs_sema, 1);
 	return 0;
 }
@@ -664,14 +664,14 @@ ReadParams read_params;
 int isofs_read2()
 {
 	int sectorstoread;
-	int sectorscanbewritten = 0; // Sectors that can be written directly to the output buffer 
+	int sectorscanbewritten = 0; // Sectors that can be written directly to the output buffer
 	int nextsector, remaining;
 	int res, read = 0;
 	u8 *p;
 
 	//Kprintf("Free stack 2%d\n", sceKernelGetThreadKernelStackFreeSize(sceKernelGetThreadId()));
 
-	SceUID fd = (SceUID)read_params.iob->i_private;
+	SceUID fd = (SceUID)read_params.iob->arg;
 
 	//Kprintf("Read %d\n", read_params.len);
 
@@ -710,7 +710,7 @@ int isofs_read2()
 	}
 
 	nextsector = handlers[fd].lba + (handlers[fd].filepointer / SECTOR_SIZE);
-	
+
 	if ((handlers[fd].filepointer & 0x7FF) != 0)
 	{
 		res = IsofsReadSectors(nextsector, 1, sectors);
@@ -721,7 +721,7 @@ int isofs_read2()
 		}
 
 		read = SECTOR_SIZE-(handlers[fd].filepointer & 0x7FF);
-		
+
 		if (read > remaining)
 		{
 			read = remaining;
@@ -740,7 +740,7 @@ int isofs_read2()
 		//sceKernelSignalSema(isofs_sema, 1);
 		return read;
 	}
-	
+
 	sectorstoread = SizeToSectors(remaining);
 
 	if ((remaining % SECTOR_SIZE) != 0)
@@ -749,8 +749,8 @@ int isofs_read2()
 	}
 	else
 	{
-		sectorscanbewritten = sectorstoread;		
-	}	
+		sectorscanbewritten = sectorstoread;
+	}
 
 	if (sectorscanbewritten > 0)
 	{
@@ -773,7 +773,7 @@ int isofs_read2()
 		//sceKernelSignalSema(isofs_sema, 1);
 		return read;
 	}
-	
+
 	res = IsofsReadSectors(nextsector, 1, sectors);
 	if (res < 0)
 	{
@@ -785,13 +785,13 @@ int isofs_read2()
 	read += (remaining % SECTOR_SIZE);
 	handlers[fd].filepointer += (remaining % SECTOR_SIZE);
 	remaining -= (remaining % SECTOR_SIZE);
-	
+
 	if (remaining > 0)
 	{
 		//sceKernelSignalSema(isofs_sema, 1);
 		return SCE_ERROR_ERRNO_EIO;
 	}
-	
+
 	//sceKernelSignalSema(isofs_sema, 1);
 	return read;
 }
@@ -805,14 +805,14 @@ int isofs_read(SceIoIob *iob, char *data, int len)
 	read_params.data = data;
 	read_params.len = len;
 	int res = sceKernelExtendKernelStack(0x1800, (void *)isofs_read2, NULL);
-	
+
 	sceKernelSignalSema(isofs_sema, 1);
 	return res;
 }
 
 SceOff isofs_lseek(SceIoIob *iob, SceOff ofs, int whence)
 {
-	SceUID fd = (SceUID)iob->i_private;
+	SceUID fd = (SceUID)iob->arg;
 
 	sceKernelWaitSema(isofs_sema, 1, NULL);
 
@@ -864,8 +864,8 @@ int isofs_getstat2()
 	Iso9660DirectoryRecord record;
 	char fullpath[256], path[256], filename[32];
 	int res, lba;
-		
-	//sceKernelWaitSema(isofs_sema, 1, NULL);	
+
+	//sceKernelWaitSema(isofs_sema, 1, NULL);
 
 	if (!getstat_params.iob || !getstat_params.file || !getstat_params.stat)
 	{
@@ -875,25 +875,25 @@ int isofs_getstat2()
 
 	if (strlen(getstat_params.file)+1 > 256)
 	{
-		// path too big for ISO9660 
+		// path too big for ISO9660
 		//sceKernelSignalSema(isofs_sema, 1);
 		return SCE_ERROR_ERRNO_ENAMETOOLONG;
 	}
-	
+
 	memset(fullpath, 0, 256);
 	strncpy(fullpath, getstat_params.file, 256);
 
 	if (fullpath[strlen(fullpath)-1] == '/')
 	{
 		fullpath[strlen(fullpath)-1] = 0;
-	}	
-	
-	if (getstat_params.iob->i_unit >= 1)
+	}
+
+	if (getstat_params.iob->fs_num >= 1)
 	{
 		//sceKernelSignalSema(isofs_sema, 1);
 		return SCE_ERROR_ERRNO_EINVAL;
 	}
-	
+
 	if (strncmp(fullpath, "/sce_lbn", 8) != 0)
 	{
 		if ((res = GetPathAndName(fullpath, path, filename)) < 0)
@@ -904,14 +904,14 @@ int isofs_getstat2()
 
 		if (path[0])
 		{
-			lba = FindPathLBA(path, &record);		 
+			lba = FindPathLBA(path, &record);
 		}
 		else
 		{
 			memcpy(&record, &main_record, sizeof(Iso9660DirectoryRecord));
-			lba = record.lsbStart;		
+			lba = record.lsbStart;
 		}
-		
+
 		if (lba < 0)
 		{
 			//sceKernelSignalSema(isofs_sema, 1);
@@ -926,7 +926,7 @@ int isofs_getstat2()
 		}
 
 		memset(getstat_params.stat, 0, sizeof(SceIoStat));
-		
+
 		if (record.fileFlags & ISO9660_FILEFLAGS_DIR)
 		{
 			getstat_params.stat->st_mode = 0x116D;
@@ -951,7 +951,7 @@ int isofs_getstat2()
 		char str[11];
 		char *p;
 		int  size;
-		
+
 		p = strstr(fullpath, "_size");
 
 		if (!p)
@@ -968,7 +968,7 @@ int isofs_getstat2()
 
 		memset(str, 0, 11);
 		strncpy(str, fullpath+8, p-(fullpath+8));
-		
+
 		lba = strtol(str, NULL, 0);
 		if (lba < 0)
 		{
@@ -992,7 +992,7 @@ int isofs_getstat2()
 			return SCE_ERROR_ERRNO_EINVAL;
 		}
 
-		// DO nothing, but return success, like official $CE driver does 
+		// DO nothing, but return success, like official $CE driver does
 	}
 
 	//sceKernelSignalSema(isofs_sema, 1);
@@ -1002,7 +1002,7 @@ int isofs_getstat2()
 int isofs_getstat(SceIoIob *iob, const char *file, SceIoStat *stat)
 {
 	sceKernelWaitSema(isofs_sema, 1, NULL);
-	
+
 	getstat_params.iob = iob;
 	getstat_params.file = file;
 	getstat_params.stat = stat;
@@ -1028,7 +1028,7 @@ int isofs_dopen(SceIoIob *iob, const char *dirname)
 
 	sceKernelWaitSema(isofs_sema, 1, NULL);
 
-	fd = (SceUID)iob->i_private;	
+	fd = (SceUID)iob->arg;
 
 	if (!(handlers[fd].attributes & ISO9660_FILEFLAGS_DIR))
 	{
@@ -1047,7 +1047,7 @@ int isofs_dopen(SceIoIob *iob, const char *dirname)
 
 int isofs_dclose(SceIoIob *iob)
 {
-	SceUID fd = (SceUID)iob->i_private;
+	SceUID fd = (SceUID)iob->arg;
 
 	sceKernelWaitSema(isofs_sema, 1, NULL);
 
@@ -1087,7 +1087,7 @@ int isofs_dread2()
 {
 	Iso9660DirectoryRecord *record;
 	u8 *p;
-	SceUID fd = (SceUID)dread_params.iob->i_private;	
+	SceUID fd = (SceUID)dread_params.iob->arg;
 
 	//Kprintf("dread.\n");
 
@@ -1155,7 +1155,7 @@ int isofs_dread2()
 			if (SECTOR_SIZE - (handlers[fd].filepointer & 0x7FF) <= handlers[fd].olddirlen)
 			{
 				p += (SECTOR_SIZE - (handlers[fd].filepointer & 0x7FF));
-				handlers[fd].filepointer += (SECTOR_SIZE - (handlers[fd].filepointer & 0x7FF));				
+				handlers[fd].filepointer += (SECTOR_SIZE - (handlers[fd].filepointer & 0x7FF));
 				record = (Iso9660DirectoryRecord *)p;
 
 				if (record->len_dr == 0)
@@ -1171,7 +1171,7 @@ int isofs_dread2()
 				handlers[fd].eof = 1;
 				//sceKernelSignalSema(isofs_sema, 1);
 				return 0;
-			}		
+			}
 		}
 
 		memset(dread_params.dirent, 0, sizeof(SceIoDirent));
@@ -1218,13 +1218,13 @@ int isofs_dread2()
 
 	//sceKernelSignalSema(isofs_sema, 1);
 
-	return 1;	
+	return 1;
 }
 
 int isofs_dread(SceIoIob *iob, SceIoDirent *dirent)
 {
 	sceKernelWaitSema(isofs_sema, 1, NULL);
-	
+
 	dread_params.iob = iob;
 	dread_params.dirent = dirent;
 	int res = sceKernelExtendKernelStack(0x1800, (void *)isofs_dread2, NULL);
@@ -1235,7 +1235,7 @@ int isofs_dread(SceIoIob *iob, SceIoDirent *dirent)
 
 int isofs_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *outdata, int outlen)
 {
-	SceUID fd = (SceUID)iob->i_private;
+	SceUID fd = (SceUID)iob->arg;
 	int lowcmd;
 	u32 *outdata32 = (u32 *)outdata;
 
@@ -1266,10 +1266,10 @@ int isofs_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *
 		if (cmd >= 0x01020001)
 		{
 			sceKernelSignalSema(isofs_sema, 1);
-			return 0;		
-		}  
+			return 0;
+		}
 
-		else if (cmd == 0x01000011) // SCE_ISOFS_CLEAR_DIRBUF 
+		else if (cmd == 0x01000011) // SCE_ISOFS_CLEAR_DIRBUF
 		{
 			sceKernelSignalSema(isofs_sema, 1);
 			return 0;
@@ -1281,8 +1281,8 @@ int isofs_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *
 
 	switch (cmd)
 	{
-		case 0x01020004: // SCE_ISOFS_GET_FILEPOINTER 
-			
+		case 0x01020004: // SCE_ISOFS_GET_FILEPOINTER
+
 			if (!outdata || outlen < 4)
 			{
 				sceKernelSignalSema(isofs_sema, 1);
@@ -1294,9 +1294,9 @@ int isofs_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *
 			return 0;
 
 		break;
-	
-		case 0x01020006: // get lba 
-			
+
+		case 0x01020006: // get lba
+
 			if (!outdata || outlen < 4)
 			{
 				sceKernelSignalSema(isofs_sema, 1);
@@ -1309,8 +1309,8 @@ int isofs_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *
 
 		break;
 
-		case 0x01020007: // get file size (64 bits) 
-			
+		case 0x01020007: // get file size (64 bits)
+
 			if (!outdata || outlen < 8)
 			{
 				return SCE_ERROR_ERRNO_EINVAL;
@@ -1321,11 +1321,11 @@ int isofs_ioctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *
 			sceKernelSignalSema(isofs_sema, 1);
 			return 0;
 
-		break; 		
+		break;
 	}
 
 	sceKernelSignalSema(isofs_sema, 1);
-	return -1;	
+	return -1;
 }
 
 int isofs_devctl(SceIoIob *iob, const char *devname, unsigned int cmd, void *indata, int inlen, void *outdata, int outlen)

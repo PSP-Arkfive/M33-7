@@ -19,7 +19,7 @@ int ms_status;
 
 int LoadStartModule(char *module)
 {
-	SceUID mod = sceKernelLoadModule(module, 0, NULL);	
+	SceUID mod = sceKernelLoadModule(module, 0, NULL);
 
 	if (mod < 0)
 		return mod;
@@ -53,7 +53,7 @@ int ReadLine(char *buf, int size, char *str, int *enabled)
 	char *s = str;
 
 	while (1)
-	{	
+	{
 		if (i >= size)
 			break;
 
@@ -90,7 +90,7 @@ int ReadLine(char *buf, int size, char *str, int *enabled)
 			if(strcmp(q, "1") == 0)
 				*enabled = 1;
 			*p = 0;
-		}   
+		}
 	}
 
 	return i;
@@ -106,7 +106,7 @@ int Ms_Callback(u32 a0, int status)
 
 int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *status, SceKernelSMOption *option)
 {
-	SceModule2 *mod = sceKernelFindModuleByUID(modid);
+	SceModule *mod = sceKernelFindModuleByUID(modid);
 	SceUID fpl = -1;
 	u32 *vshmain_args = NULL;
 	char *plug_buf = NULL;
@@ -114,7 +114,7 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 	int res;
 
 	if (mod != NULL)
-	{		
+	{
 		//Kprintf(mod->modname);
 		if (strcmp(mod->modname, "vsh_module") == 0)
 		{
@@ -125,7 +125,7 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 					if (config.skiplogo)
 					{
 						vshmain_args = (u32 *)oe_malloc(0x0400);
-						
+
 						memset(vshmain_args, 0, 0x0400);
 						vshmain_args[0/4] = 0x0400;
 						vshmain_args[4/4] = 0x20;
@@ -134,22 +134,22 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 						vshmain_args[0x284/4] = 0x40003;
 
 						argsize = 0x0400;
-						argp = vshmain_args;						
+						argp = vshmain_args;
 					}
-				}				
-			}			
+				}
+			}
 		}
-		
+
 		else if (!plugindone)
 		{
 			char *waitmodule;
-						
+
 			if (sceKernelFindModuleByName("sceNp9660_driver"))
 			{
 				ms_status = 1;
 			}
-			
-			
+
+
 			if (sceKernelInitKeyConfig() == PSP_INIT_KEYCONFIG_POPS)
 			{
 				waitmodule = "sceIoFilemgrDNAS";
@@ -162,25 +162,25 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 			if (sceKernelFindModuleByName(waitmodule))
 			{
 				SceUID fd;
-	
+
 				plugindone = 1;
-				int initmode = sceKernelInitKeyConfig();	
-				
+				int initmode = sceKernelInitKeyConfig();
+
 				if (initmode == PSP_INIT_KEYCONFIG_VSH && !sceKernelFindModuleByName("scePspNpDrm_Driver"))
 				{
 					goto START_MODULE;
 				}
-				
+
 				if (!ms_status)
-				{				
+				{
 					int out;
 					if (sceIoDevctl("mscmhc0:", 0x02025806, NULL, 0, &out, sizeof(out)) >= 0)
 					{
 						if (out == 1)
-						{				
+						{
 							evflag = sceKernelCreateEventFlag("", 0, 0, NULL);
 							SceUID cb = sceKernelCreateCallback("", (void *)Ms_Callback, NULL);
-						
+
 							if (sceIoDevctl("fatms0:", 0x02415821, &cb, 4, NULL, 0) >= 0)
 							{
 								sceKernelWaitEventFlagCB(evflag, 1, 0x11, NULL, NULL);
@@ -209,12 +209,12 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 				{
 					int size = sceIoRead(fd, plug_buf, 1024);
 					p = plug_buf;
-					
+
 					for (int i = 0; i < 5; i++)
 					{
 						char plugin[64];
 						memset(plugin, 0, sizeof(plugin));
-						
+
 						int enabled;
 						res = ReadLine(p, size, plugin, &enabled);
 						if (res > 0)
@@ -223,7 +223,7 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 							{
 								if (enabled)
 								{
-									LoadStartModule(plugin);								
+									LoadStartModule(plugin);
 								}
 							}
 
@@ -247,7 +247,7 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 				{
 					int size = sceIoRead(fd, plug_buf, 1024);
 					p = plug_buf;
-					
+
 					for (int i = 0; i < 5; i++)
 					{
 						char plugin[64];
@@ -262,7 +262,7 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 							{
 								if (enabled)
 								{
-									LoadStartModule(plugin);									
+									LoadStartModule(plugin);
 								}
 							}
 
@@ -288,19 +288,19 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 					{
 						int size = sceIoRead(fd, plug_buf, 1024);
 						p = plug_buf;
-						
+
 						for (int i = 0; i < 5; i++)
 						{
 							char plugin[64];
 							memset(plugin, 0, sizeof(plugin));
-							
+
 							int enabled;
-							res = ReadLine(p, size, plugin, enabled);
+							res = ReadLine(p, size, plugin, &enabled);
 							if (res > 0)
-							{							
+							{
 								if (enabled)
 								{
-									LoadStartModule(plugin);								
+									LoadStartModule(plugin);
 								}
 
 								size -= res;
@@ -309,10 +309,10 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 							else
 							{
 								break;
-							}						
+							}
 						}
-					
-						sceIoClose(fd);	
+
+						sceIoClose(fd);
 					}
 				}
 			}
@@ -321,13 +321,13 @@ int sceKernelStartModulePatched(SceUID modid, SceSize argsize, void *argp, int *
 
 START_MODULE:
 
-	res = sceKernelStartModule(modid, argsize, argp, status, option);	
-	
+	res = sceKernelStartModule(modid, argsize, argp, status, option);
+
 	if (vshmain_args)
 	{
-		oe_free(vshmain_args);		
+		oe_free(vshmain_args);
 	}
-	
+
 	if (plug_buf)
 	{
 		sceKernelFreeFpl(fpl, plug_buf);
@@ -342,7 +342,7 @@ int sctrlKernelSetInitApitype(int apitype)
 	int k1 = pspSdkSetK1(0);
 	int prev = sceKernelInitApitype();
 
-	*initcontrol.apitype = apitype;	
+	*initcontrol.apitype = apitype;
 
 	pspSdkSetK1(k1);
 	return prev;
@@ -371,7 +371,7 @@ int sctrlKernelSetInitMode(int mode)
 
 int sctrlHENRegisterHomebrewLoader(void *func)
 {
-	MAKE_JUMP(initcontrol.text_addr + 0x1B18, (u32) func);	
+	MAKE_JUMP(initcontrol.text_addr + 0x1B18, (u32) func);
 	ClearCaches();
 
 	return 0;
@@ -422,11 +422,11 @@ int PatchInit(int (* module_bootstart)(SceSize, BootInfo *), BootInfo *bootinfo)
 	initcontrol.FreeUnkParamAndModuleInfo = (void *)(text_addr + 0x154C);
 	initcontrol.FreeParamsAndBootInfo = (void *)(text_addr + 0x164C);
 	initcontrol.ProcessCallbacks = (void *)(text_addr + 0x13D4);
-	
+
 	MAKE_JUMP(text_addr + 0x1B20, sceKernelStartModulePatched);
 	ClearCaches();
-	
+
 	return module_bootstart(4, bootinfo);
-	
+
 }
 

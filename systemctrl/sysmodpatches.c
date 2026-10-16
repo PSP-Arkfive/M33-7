@@ -36,7 +36,7 @@ void SetConfig(SEConfig *newconfig)
 
 void sctrlSESetBootConfFileIndex(int n)
 {
-	bootfile = n;	
+	bootfile = n;
 }
 
 u32 FindPowerFunction(u32 nid)
@@ -85,12 +85,12 @@ void ApplyMemory()
 		partition->size = (ram8*1024*1024);
 		partition->address = 0x88800000 + user_size;
 		partition->data->size = (((partition->size >> 8) << 9) | 0xFC);
-	}		
+	}
 }
 
 void PatchUmdCache(u32 text_addr)
 {
-	if (sceKernelInitKeyConfig() == PSP_INIT_APITYPE_EXIT_VSH_KERNEL)
+	if (sceKernelInitKeyConfig() == PSP_INIT_KEYCONFIG_GAME)
 	{
 		if (sceKernelBootFrom() == PSP_BOOT_MS)
 		{
@@ -105,9 +105,9 @@ void PatchUmdCache(u32 text_addr)
 			int i;
 
 			for (i = 0; i < 0x10; i++)
-				prot[i] = 0xFFFFFFFF;						
+				prot[i] = 0xFFFFFFFF;
 		}
-	}	
+	}
 }
 
 int sctrlHENSetMemory(u32 p2, u32 p8)
@@ -124,7 +124,7 @@ int sctrlHENSetMemory(u32 p2, u32 p8)
 
 	ram2 = p2;
 	ram8 = p8;
-	
+
 	pspSdkSetK1(k1);
 	return 0;
 
@@ -153,7 +153,7 @@ void sctrlHENSetRebootexOverride(const u8 *rebootex)
 
 int (* reboot_decompress)(u8 *dest, u32 destSize, const u8 *src, void *unk, void *unk2);
 
-extern u8 rebootex;
+extern u8 g_rebootex;
 extern u8 rebootex_02g;
 extern u8 rebootex_03g;
 
@@ -162,12 +162,12 @@ int LoadRebootex(u8 *dest, u32 destSize, const u8 *src, void *unk, void *unk2)
 	u8 *output = (u8 *)0x88fb0000;
 	for (int i = 0; i < 0x100; i++)
 	{
-		output[i] = 0;		
+		output[i] = 0;
 	}
 
 	char *theiso = GetUmdFile();
 	if (theiso)
-	{	
+	{
 		strcpy((void *)0x88fb0000, theiso);
 	}
 
@@ -176,17 +176,17 @@ int LoadRebootex(u8 *dest, u32 destSize, const u8 *src, void *unk, void *unk2)
 	_sw(testingtool, 0x88fb00cc);
 	_sw(ram2, 0x88fb00c4);
 	_sw(ram8, 0x88fb00c8);
-	
+
 	u8 *rebootex;
 	switch(sceKernelGetModel())
 	{
-		case 0: rebootex = &rebootex; break;
+		case 0: rebootex = &g_rebootex; break;
 		case 1: rebootex = &rebootex_02g; break;
 		case 2: rebootex = &rebootex_03g; break;
 	}
 
 	sceKernelGzipDecompress((void *)0x88fc0000, 0x4000, rebootex_override ? rebootex_override : rebootex, 0);
-	return reboot_decompress(dest, destSize, src, unk, unk2);	
+	return reboot_decompress(dest, destSize, src, unk, unk2);
 }
 
 void PatchLoadExec(u32 text_addr)
@@ -201,7 +201,7 @@ void PatchLoadExec(u32 text_addr)
 	// Allow ExitVSHVSH in whatever user level
 	_sw(0x10000008, text_addr + 0x1494);
 	_sw(0, text_addr + 0x14C8);
-	
+
 	reboot_decompress = (void *)(text_addr);
 }
 
@@ -230,19 +230,19 @@ int (* CheckSfo)(char *sfo, SceSize size, void *gameinfo);
 int CheckSfoPatched(char *sfo, SceSize size, void *gameinfo)
 {
 	int largememory = 0;
-	
+
 	if (ram2 == 0)
-	{	
+	{
 		SFOHeader *header = (SFOHeader *)sfo;
 		SFODir *entries = (SFODir *)(sfo+0x14);
 		int i;
-		
+
 		for (i = 0; i < header->nitems; i++)
 		{
 			if (strcmp(sfo+header->fields_table_offs+entries[i].field_offs, "MEMSIZE") == 0)
 			{
 				memcpy(&largememory, sfo+header->values_table_offs+entries[i].val_offs, 4);
-			}			
+			}
 		}
 
 		if (largememory)
@@ -254,7 +254,7 @@ int CheckSfoPatched(char *sfo, SceSize size, void *gameinfo)
 	else
 	{
 		ApplyMemory();
-		ram2 = 0;	
+		ram2 = 0;
 	}
 
 	return CheckSfo(sfo, size, gameinfo);
@@ -269,7 +269,7 @@ void PatchInitLoadExecAndMediaSync(u32 text_addr)
 	{
 		if (strstr(filename, ".PBP"))
 		{
-			// Patch mediasync (avoid error 0x80120005 old sfo error) 
+			// Patch mediasync (avoid error 0x80120005 old sfo error)
 			// Make return 0, move s0, zero
 			_sw(0x00008021, text_addr + 0x628);
 
@@ -285,8 +285,8 @@ void PatchInitLoadExecAndMediaSync(u32 text_addr)
 			}
 
 			ClearCaches();
-			
-			clear = 1;			
+
+			clear = 1;
 		}
 
 		else if (strstr(filename, "disc") == filename)
@@ -333,12 +333,12 @@ void PatchInitLoadExecAndMediaSync(u32 text_addr)
 	if (clear)
 	{
 		SetUmdFile("");
-		bootfile = 0;		
+		bootfile = 0;
 	}
 
-	SceModule2 *mod = sceKernelFindModuleByName("sceLoadExec");
+	SceModule *mod = sceKernelFindModuleByName("sceLoadExec");
 	PatchLoadExec(mod->text_addr);
-	
+
 	PatchMesgLed();
 	ClearCaches();
 }
@@ -361,22 +361,22 @@ int sceUmdActivatePatched(const int mode, const char *aliasname)
 {
 	int k1 = pspSdkSetK1(0);
 	sceIoAssign(aliasname, "umd0:", "isofs0:", IOASSIGN_RDONLY, NULL, 0);
-	
+
 	int report_callback = !(drivestat & SCE_UMD_READABLE);
-	
-	drivestat = SCE_UMD_READABLE | SCE_UMD_READY | SCE_UMD_MEDIA_IN;	
+
+	drivestat = SCE_UMD_READABLE | SCE_UMD_READY | SCE_UMD_MEDIA_IN;
 
 	if (report_callback)
 		UmdCallback(SCE_UMD_READABLE);
 
-	pspSdkSetK1(k1);	
+	pspSdkSetK1(k1);
 	return 0;
 }
 
 int sceUmdDeactivatePatched(const int mode, const char *aliasname)
 {
 	int k1 = pspSdkSetK1(0);
-	
+
 	sceIoUnassign(aliasname);
 	drivestat = SCE_UMD_MEDIA_IN | SCE_UMD_READY;
 	UmdCallback(drivestat);
@@ -388,9 +388,9 @@ int sceUmdDeactivatePatched(const int mode, const char *aliasname)
 int sceUmdGetDiscInfoPatched(SceUmdDiscInfo *disc_info)
 {
 	int k1 = pspSdkSetK1(0);
-	
-	disc_info->uiSize = 8; 
-	disc_info->uiMediaType = SCE_UMD_FMT_GAME; 
+
+	disc_info->uiSize = 8;
+	disc_info->uiMediaType = SCE_UMD_FMT_GAME;
 	pspSdkSetK1(k1);
 
 	return 0;
@@ -399,7 +399,7 @@ int sceUmdGetDiscInfoPatched(SceUmdDiscInfo *disc_info)
 int sceUmdRegisterUMDCallBackPatched(SceUID cbid)
 {
 	int k1 = pspSdkSetK1(0);
-	
+
 	umdcallback = cbid;
 	UmdCallback(drivestat);
 	pspSdkSetK1(k1);
@@ -440,9 +440,9 @@ void PatchIsofsDriver(u32 text_addr)
 		{
 			if (config.umdmode == MODE_OE_LEGACY)
 			{
-				// make module exit inmediately 
+				// make module exit inmediately
 				_sw(0x03E00008, text_addr + 0x4328);
-				_sw(0x24020001, text_addr + 0x432C);				
+				_sw(0x24020001, text_addr + 0x432C);
 
 				ClearCaches();
 			}
@@ -506,8 +506,8 @@ void PatchChkreg()
 	{
 		if (config.fakeregion)
 		{
-			REDIRECT_FUNCTION(pscode, sceChkregGetPsCodePatched);			
-		}		
+			REDIRECT_FUNCTION(pscode, sceChkregGetPsCodePatched);
+		}
 	}
 
 	ClearCaches();
@@ -517,20 +517,20 @@ void SetSpeed(int cpu, int bus)
 {
 	if (cpu == 20  || cpu == 75 || cpu == 100 || cpu == 133 || cpu == 333 || cpu == 300 ||
 		cpu == 266 || cpu == 222)
-	{	
+	{
 		scePowerSetClockFrequency_k = (void *)FindPowerFunction(0x737486F2);
 		scePowerSetClockFrequency_k(cpu, cpu, bus);
 
 		if (sceKernelInitKeyConfig() != PSP_INIT_KEYCONFIG_VSH)
-		{	
+		{
 			MAKE_DUMMY_FUNCTION0((u32)scePowerSetClockFrequency_k);
 			MAKE_DUMMY_FUNCTION0((u32)FindPowerFunction(0x545A7F3C));
 			MAKE_DUMMY_FUNCTION0((u32)FindPowerFunction(0xB8D7B3FB));
 			MAKE_DUMMY_FUNCTION0((u32)FindPowerFunction(0x843FBF43));
 
 			ClearCaches();
-		}		
-	}	
+		}
+	}
 }
 
 void sctrlHENSetSpeed(int cpu, int bus)
@@ -545,7 +545,7 @@ static int x = 0;
 static SceUInt vtimer_handler(SceUID uid, SceInt64 a, SceInt64 b, void *param)
 {
 	// Note: using new nid for power_driver, old nid for power
-	
+
 	int (* batcharging)(void) = (void *)FindPowerFunction(0x1E490401);
 
 	if (!batcharging())
@@ -553,39 +553,39 @@ static SceUInt vtimer_handler(SceUID uid, SceInt64 a, SceInt64 b, void *param)
 		if (connected == 1)
 		{
 			if (x)
-			{			
+			{
 				int (* stop_charge)(int) = (void *)FindPowerDriverFunction(0x90285886);
-				stop_charge(0);				
+				stop_charge(0);
 			}
 
 			x = !x;
 			connected = 0;
 			return 5000000;
 		}
-		
+
 		else
 		{
 			int (* start_charge)(int) = (void *)FindPowerDriverFunction(0x733F973B);
 			start_charge(1);
-			connected = 1;			
+			connected = 1;
 
 			return 15000000;
 		}
-	}	
+	}
 
 	return 2000000;
 }
 
 void OnImposeLoad(u32 text_addr)
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceChkreg");
+	SceModule *mod = sceKernelFindModuleByName("sceChkreg");
 
 	if (mod)
 	{
 		sctrlSEGetConfig(&config);
 		PatchChkreg();
 	}
-	
+
 	if (sceKernelInitKeyConfig() == PSP_INIT_KEYCONFIG_GAME)
 	{
 		char *theiso = GetUmdFile();
@@ -598,7 +598,7 @@ void OnImposeLoad(u32 text_addr)
 				{
 					sceIoDelDrv("isofs");
 					sceIoAddDrv(getisofs_driver());
-					
+
 					if (config.umdmode == MODE_OE_LEGACY)
 					{
 						DoNoUmdPatches();
@@ -606,8 +606,8 @@ void OnImposeLoad(u32 text_addr)
 
 					sceIoAssign("disc0:", "umd0:", "isofs0:", IOASSIGN_RDONLY, NULL, 0);
 				}
-			}			
-		}		
+			}
+		}
 	}
 
 	if (sceKernelGetModel() != 0 && config.usbcharge)
@@ -615,12 +615,12 @@ void OnImposeLoad(u32 text_addr)
 		SceUID vtimer = sceKernelCreateVTimer("", NULL);
 
 		if (vtimer >= 0)
-		{	
+		{
 			sceKernelStartVTimer(vtimer);
 			sceKernelSetVTimerHandlerWide(vtimer, 5000000, vtimer_handler, NULL);
 
 			// Destroy calls to charge functions from usb.prx
-			SceModule2 *mod = sceKernelFindModuleByName("sceUSB_Driver");
+			SceModule *mod = sceKernelFindModuleByName("sceUSB_Driver");
 			if (mod)
 			{
 				MAKE_DUMMY_FUNCTION0(mod->text_addr + 0x8BA0);

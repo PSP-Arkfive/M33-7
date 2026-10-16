@@ -27,7 +27,7 @@ const int module_sdk_version = 0x5000010;
 #define OE_TAG_MS_UPDATER		0x3EAD0AEE
 
 static SceUID start_thread;
-static SceModule2 *last_module;
+static SceModule *last_module;
 static STMOD_HANDLER stmod_handler = NULL;
 static KDEC_HANDLER kdec_handler = NULL;
 static MDEC_HANDLER mdec_handler = NULL;
@@ -46,7 +46,6 @@ static int (* SetKeys)(int unk, void *buf);
 static int (* MDecrypt)(u32 *tag, u8 *keys, u32 code, void *buf, int size, int *retSize, int m, void *unk0, int unk1, int unk2, int unk3, int unk4);
 
 
-int sceKernelCheckExecFile(void *buf, int *check);
 int sceKernelDcacheWBinvAll();
 int sceKernelLoadExecutableObject(char *buf, void *check);
 int sceKernelApplyPspRelSection(u32 *a0, void *a1, void *a2, void *a3, void *t0, void *t1);
@@ -54,57 +53,57 @@ int sceKernelApplyPspRelSection(u32 *a0, void *a1, void *a2, void *a3, void *t0,
 //static int debug = 0;
 
 /* ELF file header */
-typedef struct { 
+typedef struct {
 	u32		e_magic;
 	u8		e_class;
 	u8		e_data;
 	u8		e_idver;
 	u8		e_pad[9];
-	u16		e_type; 
-	u16		e_machine; 
-	u32		e_version; 
-	u32		e_entry; 
-	u32		e_phoff; 
-	u32		e_shoff; 
-	u32		e_flags; 
-	u16		e_ehsize; 
-	u16		e_phentsize; 
-	u16		e_phnum; 
-	u16		e_shentsize; 
-	u16		e_shnum; 
-	u16		e_shstrndx; 
+	u16		e_type;
+	u16		e_machine;
+	u32		e_version;
+	u32		e_entry;
+	u32		e_phoff;
+	u32		e_shoff;
+	u32		e_flags;
+	u16		e_ehsize;
+	u16		e_phentsize;
+	u16		e_phnum;
+	u16		e_shentsize;
+	u16		e_shnum;
+	u16		e_shstrndx;
 } __attribute__((packed)) Elf32_Ehdr;
 
 /* ELF section header */
-typedef struct { 
-	u32		sh_name; 
-	u32		sh_type; 
-	u32		sh_flags; 
-	u32		sh_addr; 
-	u32		sh_offset; 
-	u32		sh_size; 
-	u32		sh_link; 
-	u32		sh_info; 
-	u32		sh_addralign; 
-	u32		sh_entsize; 
+typedef struct {
+	u32		sh_name;
+	u32		sh_type;
+	u32		sh_flags;
+	u32		sh_addr;
+	u32		sh_offset;
+	u32		sh_size;
+	u32		sh_link;
+	u32		sh_info;
+	u32		sh_addralign;
+	u32		sh_entsize;
 } __attribute__((packed)) Elf32_Shdr;
 
-typedef struct 
-{ 
-	u32 p_type; 
-	u32 p_offset; 
-	u32 p_vaddr; 
-	u32 p_paddr; 
-	u32 p_filesz; 
-	u32 p_memsz; 
-	u32 p_flags; 
-	u32 p_align; 
+typedef struct
+{
+	u32 p_type;
+	u32 p_offset;
+	u32 p_vaddr;
+	u32 p_paddr;
+	u32 p_filesz;
+	u32 p_memsz;
+	u32 p_flags;
+	u32 p_align;
 } Elf32_Phdr;
 
 void ClearCaches()
 {
 	sceKernelIcacheInvalidateAll();
-	sceKernelDcacheWritebackInvalidateAll();	
+	sceKernelDcacheWritebackInvalidateAll();
 }
 
 int IsAddress(void *addr)
@@ -122,7 +121,7 @@ int IsAddress(void *addr)
 
 	if (u >= 0x88800000 && u <= 0x8883FFFF)
 		return 1;
-	
+
 	return 0;
 }
 
@@ -170,20 +169,20 @@ int PatchExec3(void *buf, int *check, int isPlain, int res)
 		if (check[0x20/4] == -1)
 		{
 			if (IsStaticElf(buf))
-			{		
+			{
 				check[0x20/4] = 3;
-			}			
-		}	
-				
+			}
+		}
+
 		return res;
 	}
 
 	if (!(PatchExec2(buf, check) & 0x0000FF00))
-	{		
+	{
 		return res;
 	}
 
-	check[0x44/4] = 1;	
+	check[0x44/4] = 1;
 	return 0;
 }
 
@@ -202,15 +201,15 @@ int PatchExec1(void *buf, int *check)
 		{
 			return -1;
 		}
-		
+
 		if (check[0x10/4] == 0)
 		{
-			if (check[0x44/4] != 0) 
-			{ 
-				check[0x48/4] = 1; 
-				return 0; 
-			} 
-			
+			if (check[0x44/4] != 0)
+			{
+				check[0x48/4] = 1;
+				return 0;
+			}
+
 			return -1;
 		}
 
@@ -223,23 +222,23 @@ int PatchExec1(void *buf, int *check)
 	else if ((u32)check[8/4] >= 0x52)
 	{
 		return -1;
-	}	
+	}
 
-	if (check[0x44/4] != 0) 
-	{ 
-		check[0x48/4] = 1; 
-		return 0; 
-	} 
-	
+	if (check[0x44/4] != 0)
+	{
+		check[0x48/4] = 1;
+		return 0;
+	}
+
 	return -2;
 }
 
-int sceKernelCheckExecFilePatched(int *buf, int *check)
+int sceKernelCheckExecFilePatched(int *buf, SceLoadCoreExecFileInfo *check)
 {
-	int res = PatchExec1(buf, check);
+	int res = PatchExec1(buf, (int *)check);
 
 	if (res == 0)
-	{		
+	{
 		return res;
 	}
 
@@ -247,12 +246,12 @@ int sceKernelCheckExecFilePatched(int *buf, int *check)
 
 	res = sceKernelCheckExecFile(buf, check);
 
-	return PatchExec3(buf, check, isPlain, res);	
+	return PatchExec3(buf, (int *)check, isPlain, res);
 }
 
 int ProbeExec1Patched(void *buf, u32 *check)
 {
-	int res; 
+	int res;
 	u16 attr;
 	u16 *modinfo;
 	u16 realattr;
@@ -266,13 +265,13 @@ int ProbeExec1Patched(void *buf, u32 *check)
 
 	realattr = *modinfo;
 	attr = realattr & 0x1E00;
-	
+
 	if (attr != 0)
 	{
 		u16 attr2 = ((u16 *)check)[0x58/2];
 		attr2 &= 0x1e00;
 
-		
+
 		if (attr2 != attr)
 		{
 			((u16 *)check)[0x58/2] = realattr;
@@ -280,7 +279,7 @@ int ProbeExec1Patched(void *buf, u32 *check)
 	}
 
 	if (check[0x48/4] == 0)
-		check[0x48/4] = 1;	
+		check[0x48/4] = 1;
 
 	return res;
 }
@@ -291,7 +290,7 @@ int PartitionCheckPatched(u32 *st0, u32 *check)
 {
 	SceUID fd = (SceUID)st0[0x34/4];
 	u32 pos;
-	u16 attributes;	
+	u16 attributes;
 
 	if (fd < 0)
 		return PartitionCheck(st0, check);
@@ -323,7 +322,7 @@ int PartitionCheckPatched(u32 *st0, u32 *check)
 		}
 
 		sceIoLseek(fd, buf[0x20/4]+check[0x4C/4], PSP_SEEK_SET);
-		
+
 		if (!IsStaticElf(buf))
 		{
 			check[0x10/4] = buf[0x24/4]-buf[0x20/4]; // Allow psar's in decrypted pbp's
@@ -343,7 +342,7 @@ int PartitionCheckPatched(u32 *st0, u32 *check)
 
 	if (IsStaticElf(buf))
 	{
-		check[0x44/4] = 0;		
+		check[0x44/4] = 0;
 	}
 	else
 	{
@@ -358,7 +357,7 @@ int PartitionCheckPatched(u32 *st0, u32 *check)
 	}
 
 	sceIoLseek(fd, pos, PSP_SEEK_SET);
-	return PartitionCheck(st0, check);	
+	return PartitionCheck(st0, check);
 }
 
 char *GetStrTab(u8 *buf)
@@ -374,7 +373,7 @@ char *GetStrTab(u8 *buf)
 	for (i = 0; i < header->e_shnum; i++)
 	{
 		if (header->e_shstrndx == i)
-		{			
+		{
 			Elf32_Shdr *section = (Elf32_Shdr *)pData;
 
 			if (section->sh_type == 3)
@@ -390,7 +389,7 @@ char *GetStrTab(u8 *buf)
 int ProbeExec2Patched(u8 *buf, u32 *check)
 {
 	int res;
-	
+
 	res = ProbeExec2(buf, check);
 
 	if (((u32 *)buf)[0] != 0x464C457F) /* ELF */
@@ -408,11 +407,11 @@ int ProbeExec2Patched(u8 *buf, u32 *check)
 		if (IsStaticElf(buf))
 		{
 			char *strtab = GetStrTab(buf);
-		
+
 			if (strtab)
 			{
 				Elf32_Ehdr *header = (Elf32_Ehdr *)buf;
-				int i;				
+				int i;
 
 				u8 *pData = buf+header->e_shoff;
 
@@ -425,12 +424,12 @@ int ProbeExec2Patched(u8 *buf, u32 *check)
 						check[0x4C/4] = section->sh_offset;
 						check[0x58/4] = 0;
 					}
-				
+
 					pData += header->e_shentsize;
 				}
 			}
 		}
-	}	
+	}
 
 	return res;
 }
@@ -438,7 +437,7 @@ int ProbeExec2Patched(u8 *buf, u32 *check)
 u32 sctrlHENFindFunction(const char* szMod, const char* szLib, u32 nid)
 {
 	struct SceLibraryEntryTable *entry;
-	SceModule2 *pMod;
+	SceModule *pMod;
 	void *entTab;
 	int entLen;
 
@@ -447,7 +446,7 @@ u32 sctrlHENFindFunction(const char* szMod, const char* szLib, u32 nid)
 	if (!pMod)
 	{
 		pMod = sceKernelFindModuleByAddress((u32)szMod);
-		
+
 		if (!pMod)
 			return 0;
 	}
@@ -459,7 +458,7 @@ u32 sctrlHENFindFunction(const char* szMod, const char* szLib, u32 nid)
 		if (nnid)
 			nid = nnid;
 	}
-	
+
 	int i = 0;
 
 	entTab = pMod->ent_top;
@@ -482,7 +481,7 @@ u32 sctrlHENFindFunction(const char* szMod, const char* szLib, u32 nid)
 				for(count = 0; count < (entry->stubcount+entry->vstubcount); count++)
 				{
 					if (vars[count] == nid)
-						return vars[count+total];					
+						return vars[count+total];
 				}
 			}
 		}
@@ -501,7 +500,7 @@ SceUID sceKernelCreateThreadPatched(const char *name, SceKernelThreadEntry entry
 	if (thid >= 0 && strcmp(name, "SceModmgrStart") == 0)
 	{
 		start_thread = thid;
-		last_module = sceKernelFindModuleByAddress((u32)entry);		
+		last_module = sceKernelFindModuleByAddress((u32)entry);
 	}
 
 	return thid;
@@ -530,11 +529,11 @@ STMOD_HANDLER sctrlHENSetStartModuleHandler(STMOD_HANDLER handler)
 	return res;
 }
 
-int OnModuleStart(SceModule2 *mod)
+int OnModuleStart(SceModule *mod)
 {
 	char *modname = mod->modname;
 	u32 text_addr = mod->text_addr;
-	
+
 	if (strcmp(modname, "sceIsofs_driver") == 0)
 	{
 		if (sceKernelInitApitype() == 0x120)
@@ -607,7 +606,7 @@ int OnModuleStart(SceModule2 *mod)
 			OnSystemStatusIdle();
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -644,7 +643,7 @@ int UnsignCheckPatched(u8 *buf, int size, int m)
 int KDecryptPatched(u32 *buf, int size, int *retSize, int m)
 {
 	u8 *buf8 = (u8 *)buf;
-	
+
 	if (kdec_handler)
 	{
 		if (kdec_handler(buf, size, retSize, m) >= 0)
@@ -652,16 +651,16 @@ int KDecryptPatched(u32 *buf, int size, int *retSize, int m)
 	}
 
 	if (buf != NULL && retSize != NULL)
-	{	
+	{
 		u32 oe_tag = buf[0x130/4];
-		
+
 		if (oe_tag == OE_TAG_KERNEL_500 || oe_tag == OE_TAG_GENERIC_KERNEL)
 		{
 			if (buf8[0x150] == 0x1F && buf8[0x151] == 0x8B)
-			{			
-				*retSize = buf[0xB0/4];				
-				memmove(buf, ((u8 *)buf)+0x150, *retSize);				
-			
+			{
+				*retSize = buf[0xB0/4];
+				memmove(buf, ((u8 *)buf)+0x150, *retSize);
+
 				return 0;
 			}
 		}
@@ -676,7 +675,7 @@ int KDecryptPatched(u32 *buf, int size, int *retSize, int m)
 			SetKeys(0, (void *)0xbfc00200);
 			res = KDecrypt(buf, size, retSize, m);
 		}
-	}	
+	}
 
 	return res;
 }
@@ -684,27 +683,27 @@ int KDecryptPatched(u32 *buf, int size, int *retSize, int m)
 int MDecryptPatched(u32 *tag, u8 *keys, u32 code, u32 *buf, int size, int *retSize, int m, void *unk0, int unk1, int unk2, int unk3, int unk4)
 {
 	u8 *buf8 = (u8 *)buf;
-	
+
 	if (mdec_handler)
 	{
 		if (mdec_handler(tag, keys, code, buf, size, retSize, m, unk0, unk1, unk2, unk3, unk4) >= 0)
 			return 0;
-	}	
-	
+	}
+
 	if (buf != NULL && tag != NULL && retSize != NULL)
-	{	
+	{
 		u32 oe_tag = buf[0x130/4];
-		
+
 		if (oe_tag == OE_TAG_USER_371 || oe_tag == OE_TAG_MS_GAME || oe_tag == OE_TAG_MS_UPDATER || oe_tag == 0x8555ABF2)
 		{
 			if (buf8[0x150] == 0x1F && buf8[0x151] == 0x8B)
-			{			
-				*retSize = buf[0xB0/4];				
-				memmove(buf, ((u8 *)buf)+0x150, *retSize);					
-			
+			{
+				*retSize = buf[0xB0/4];
+				memmove(buf, ((u8 *)buf)+0x150, *retSize);
+
 				return 0;
 			}
-		}		
+		}
 	}
 
 	int res = MDecrypt(tag, keys, code, buf, size, retSize, m, unk0, unk1, unk2, unk3, unk4);
@@ -722,14 +721,14 @@ int MDecryptPatched(u32 *tag, u8 *keys, u32 code, u32 *buf, int size, int *retSi
 
 KDEC_HANDLER sctrlHENRegisterKDecryptHandler(KDEC_HANDLER handler)
 {
-	KDEC_HANDLER res = kdec_handler;	
+	KDEC_HANDLER res = kdec_handler;
 	kdec_handler = handler;
 	return res;
 }
 
 MDEC_HANDLER sctrlHENRegisterMDecryptHandler(MDEC_HANDLER handler)
 {
-	MDEC_HANDLER res = mdec_handler;	
+	MDEC_HANDLER res = mdec_handler;
 	mdec_handler = handler;
 	return res;
 }
@@ -737,9 +736,9 @@ MDEC_HANDLER sctrlHENRegisterMDecryptHandler(MDEC_HANDLER handler)
 void PatchSyscall(u32 funcaddr, void *newfunc)
 {
 	u32 *vectors;
-	
+
 	__asm__ volatile ("cfc0 %0, $12" : "=r" (vectors));
-	
+
 	for (int i = 0; i < 0x1000; i++)
 	{
 		if (vectors[i + 4] == funcaddr)
@@ -751,7 +750,7 @@ void PatchSyscall(u32 funcaddr, void *newfunc)
 
 void PatchLoadCore()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceLoaderCore");
+	SceModule *mod = sceKernelFindModuleByName("sceLoaderCore");
 	u32 text_addr = mod->text_addr;
 
 	/* Patch calls and references to sceKernelCheckExecFile */
@@ -770,9 +769,9 @@ void PatchLoadCore()
 	MAKE_CALL(text_addr + 0x486C, ProbeExec2Patched);
 
 	/* Allow kernel modules to have syscall exports */
-	_sw(0x3c080000, text_addr + 0x40DC);	
-	_sw(0x3c080000, text_addr + 0x40C4);	
-	
+	_sw(0x3c080000, text_addr + 0x40DC);
+	_sw(0x3c080000, text_addr + 0x40C4);
+
 	/* Allow higher firmware modules to load */
 	// movz a0, zero, a1 -> mov a0, zero
 	_sw(0x00002021, text_addr + 0x7CF4);
@@ -793,9 +792,9 @@ void PatchLoadCore()
 
 void PatchModuleMgr()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceModuleManager");
+	SceModule *mod = sceKernelFindModuleByName("sceModuleManager");
 	u32 text_addr = mod->text_addr;
-	
+
 	/* Patch ModuleMgr sceKernelCheckExec calls */
 	MAKE_JUMP(text_addr + 0x8024, sceKernelCheckExecFilePatched);
 
@@ -806,7 +805,7 @@ void PatchModuleMgr()
 	_sw(0, text_addr + 0x2BE4); // sceKernelLoadModuleVSH
 	_sw(0, text_addr + 0x2C3C); // sceKernelLoadModuleVSH
 	_sw(0x10000009, text_addr + 0x2C68); // sceKernelLoadModuleVSH
-	
+
 	_sw(0, text_addr + 0x2F90); // sceKernelLoadModule (Kernel)
 	_sw(0, text_addr + 0x2FE4); // sceKernelLoadModule (Kernel)
 	_sw(0x10000010, text_addr + 0x3010); // sceKernelLoadModule (Kernel)
@@ -816,19 +815,19 @@ void PatchModuleMgr()
 	MAKE_CALL(text_addr + 0x62B8, PartitionCheckPatched);
 
 	// Add in some patches from TyRaNiD to allow modules before init
-	// to be queried with sceKernelQueryModuleInfo 
-	_sw(0, text_addr + 0x3F6C); 
+	// to be queried with sceKernelQueryModuleInfo
+	_sw(0, text_addr + 0x3F6C);
 	_sw(0, text_addr + 0x3FB4);
 	_sw(0, text_addr + 0x3FCC);
 
 	// New Patches in 3.70+ to replace the ApplyPspRelSection stuff
 	MAKE_JUMP(text_addr + 0x817C, sceKernelCreateThreadPatched);
-	MAKE_JUMP(text_addr + 0x81C4, sceKernelStartThreadPatched);	
+	MAKE_JUMP(text_addr + 0x81C4, sceKernelStartThreadPatched);
 }
 
 void PatchMemlmd()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceMemlmd");
+	SceModule *mod = sceKernelFindModuleByName("sceMemlmd");
 	u32 text_addr = mod->text_addr;
 
 	if (sceKernelGetModel() == 0)
@@ -859,7 +858,7 @@ void PatchMemlmd()
 
 void PatchMesgLed()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceMesgLed");
+	SceModule *mod = sceKernelFindModuleByName("sceMesgLed");
 	u32 text_addr = mod->text_addr;
 
 	if (sceKernelGetModel() == 0)
@@ -893,7 +892,7 @@ void PatchMesgLed()
 
 void PatchInterruptMgr()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceInterruptManager");
+	SceModule *mod = sceKernelFindModuleByName("sceInterruptManager");
 	u32 text_addr = mod->text_addr;
 
 	// Allow execution of syscalls in kmode
@@ -916,11 +915,11 @@ int module_start(SceSize args, void *argp)
 
 	// Register primary stmod_handler
 	sctrlHENSetStartModuleHandler(OnModuleStart);
-		
-	SetUmdFile((char *)0x88fb0000);	
-	SetConfig((SEConfig *)0x88fb0050);	
-	sctrlSESetBootConfFileIndex(*(int *)0x88fb00c0);	
-	
+
+	SetUmdFile((char *)0x88fb0000);
+	SetConfig((SEConfig *)0x88fb0050);
+	sctrlSESetBootConfFileIndex(*(int *)0x88fb00c0);
+
 	testingtool = *(int *)0x88fb00cc;
 	ram2 = *(int *)0x88fb00c4;
 	ram8 = *(int *)0x88fb00c8;

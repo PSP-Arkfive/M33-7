@@ -1,6 +1,5 @@
 #ifndef __OE_MALLOC_H__
-
-#define __OE_MALLOC_H_
+#define __OE_MALLOC_H__
 
 int  mallocinit();
 #define malloc oe_malloc
@@ -9,5 +8,5 @@ void *oe_malloc(size_t size);
 void oe_free(void *p);
 int  mallocterminate();
 
-#endif
+#endif /* __OE_MALLOC_H__ */
 
