@@ -37,28 +37,28 @@ int GetIsoIndex(const char *file)
 
 	if (!p)
 		return strtol(file+22, NULL, 10);
-	
+
 	memset(number, 0, 5);
 	strncpy(number, file+22, p-(file+22));
 
-	return strtol(number, NULL, 10);	
+	return strtol(number, NULL, 10);
 }
 
 int CorruptIconPatch(char *name)
 {
 	char path[256];
 	sprintf(path, "ms0:/PSP/GAME/%s%%/EBOOT.PBP", name);
-	
+
 	SceIoStat stat;
 	memset(&stat, 0, sizeof(stat));
-	
+
 	if (sceIoGetstat(path, &stat) >= 0)
 	{
 		strcpy(name, "__SCE"); // hide icon
-		
+
 		return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -78,7 +78,7 @@ int ReadCache()
 
 	if (!cache)
 	{
-		cache = (VirtualPbp *)oe_malloc(32*sizeof(VirtualPbp));		
+		cache = (VirtualPbp *)oe_malloc(32*sizeof(VirtualPbp));
 	}
 
 	memset(cache, 0, sizeof(VirtualPbp)*32);
@@ -114,7 +114,7 @@ int SaveCache()
 		if (cache[i].isofile[0] != 0 && !referenced[i])
 		{
 			cachechanged = 1;
-			memset(&cache[i], 0, sizeof(VirtualPbp));			
+			memset(&cache[i], 0, sizeof(VirtualPbp));
 		}
 	}
 
@@ -190,14 +190,14 @@ SceUID sceIoDopenPatched(const char *dirname)
 	if (index >= 0)
 	{
 		int res = virtualpbp_open(index);
-		
+
 		pspSdkSetK1(k1);
 		return res;
 	}
 
 	if (strcmp(dirname, "ms0:/PSP/GAME") == 0)
 	{
-		game = 1;		
+		game = 1;
 	}
 
 	pspSdkSetK1(k1);
@@ -207,28 +207,28 @@ SceUID sceIoDopenPatched(const char *dirname)
 	if (game)
 	{
 		gamedfd = res;
-		overiso = 0;				
-	}	
+		overiso = 0;
+	}
 
 	pspSdkSetK1(k1);
 	return res;
 }
 
 int sceIoDreadPatched(SceUID fd, SceIoDirent *dir)
-{	
+{
 	int res;
 	u32 k1 = pspSdkSetK1(0);
 
 	if (vpbpinited)
 	{
-		res = virtualpbp_dread(fd, dir);		
+		res = virtualpbp_dread(fd, dir);
 		if (res >= 0)
 		{
 			pspSdkSetK1(k1);
 			return res;
 		}
 	}
-	
+
 	if (fd >= 0)
 	{
 		if (fd == gamedfd)
@@ -236,17 +236,17 @@ int sceIoDreadPatched(SceUID fd, SceIoDirent *dir)
 			if (isodfd < 0 && !overiso)
 			{
 				isodfd = sceIoDopen("ms0:/ISO");
-				
+
 				if (isodfd >= 0)
 				{
 					if (!vpbpinited)
 					{
 						virtualpbp_init();
-						vpbpinited = 1;							
+						vpbpinited = 1;
 					}
 					else
 					{
-						virtualpbp_reset();						
+						virtualpbp_reset();
 					}
 
 					ReadCache();
@@ -280,9 +280,9 @@ NEXT:
 						else
 						{
 							res2 = virtualpbp_add(fullpath, &dir->d_stat.sce_st_mtime, &vpbp);
-							docache = 1;							
+							docache = 1;
 						}
-						
+
 						if (res2 >= 0)
 						{
 							ApplyIsoNamePatch(dir);
@@ -290,16 +290,16 @@ NEXT:
 							// Fake the entry from file to directory
 							dir->d_stat.st_mode = 010777;
 							dir->d_stat.st_attr = 0x0010;
-							dir->d_stat.st_size = 0;	
-							
+							dir->d_stat.st_size = 0;
+
 							// Change the modifcation time to creation time
 							memcpy(&dir->d_stat.sce_st_mtime, &dir->d_stat.sce_st_ctime, sizeof(ScePspDateTime));
 
 							if (docache)
 							{
-								Cache(&vpbp);									
+								Cache(&vpbp);
 							}
-							
+
 							if (videoiso_mounted)
 								ReturnToDisc();
 						}
@@ -308,7 +308,7 @@ NEXT:
 					{
 						goto NEXT;
 					}
-					
+
 					pspSdkSetK1(k1);
 					return res;
 				}
@@ -319,7 +319,7 @@ NEXT:
 					isodfd = -1;
 					overiso = 1;
 				}
-			}			
+			}
 		}
 	}
 
@@ -341,8 +341,8 @@ int sceIoDclosePatched(SceUID fd)
 	int res;
 
 	if (vpbpinited)
-	{	
-		res = virtualpbp_close(fd);	
+	{
+		res = virtualpbp_close(fd);
 		if (res >= 0)
 		{
 			pspSdkSetK1(k1);
@@ -353,8 +353,8 @@ int sceIoDclosePatched(SceUID fd)
 	if (fd == gamedfd)
 	{
 		gamedfd = -1;
-		overiso = 0;		
-		SaveCache();		
+		overiso = 0;
+		SaveCache();
 	}
 
 	pspSdkSetK1(k1);
@@ -370,9 +370,9 @@ SceUID sceIoOpenPatched(const char *file, int flags, SceMode mode)
 	{
 		if (videoiso_mounted)
 			ReturnToDisc();
-		
+
 		int res = virtualpbp_open(index);
-		
+
 		pspSdkSetK1(k1);
 		return res;
 	}
@@ -391,12 +391,12 @@ SceUID sceIoOpenPatched(const char *file, int flags, SceMode mode)
 
 int sceIoClosePatched(SceUID fd)
 {
-	u32 k1 = pspSdkSetK1(0);	
+	u32 k1 = pspSdkSetK1(0);
 	int res = -1;
 
 	if (vpbpinited)
-	{	
-		res = virtualpbp_close(fd);		
+	{
+		res = virtualpbp_close(fd);
 	}
 
 	if (fd == paramsfo)
@@ -414,19 +414,19 @@ int sceIoClosePatched(SceUID fd)
 
 int sceIoReadPatched(SceUID fd, void *data, SceSize size)
 {
-	u32 k1 = pspSdkSetK1(0);	
+	u32 k1 = pspSdkSetK1(0);
 	int res = -1;
-	
+
 	if (vpbpinited)
 	{
-		res = virtualpbp_read(fd, data, size);		
+		res = virtualpbp_read(fd, data, size);
 	}
 
 	if (fd == paramsfo)
 	{
 		int i;
 
-		pspSdkSetK1(k1);		
+		pspSdkSetK1(k1);
 		res = sceIoRead(fd, data, size);
 		pspSdkSetK1(0);
 
@@ -482,7 +482,7 @@ int sceIoLseek32Patched(SceUID fd, int offset, int whence)
 
 	if (vpbpinited)
 	{
-		res = virtualpbp_lseek(fd, offset, whence);		
+		res = virtualpbp_lseek(fd, offset, whence);
 	}
 
 	pspSdkSetK1(k1);
@@ -501,7 +501,7 @@ int sceIoGetstatPatched(const char *file, SceIoStat *stat)
 	if (index >= 0)
 	{
 		int res = virtualpbp_getstat(index, stat);
-		
+
 		pspSdkSetK1(k1);
 		return res;
 	}
@@ -519,7 +519,7 @@ int sceIoChstatPatched(const char *file, SceIoStat *stat, int bits)
 	if (index >= 0)
 	{
 		int res = virtualpbp_chstat(index, stat, bits);
-		
+
 		pspSdkSetK1(k1);
 		return res;
 	}
@@ -537,7 +537,7 @@ int sceIoRemovePatched(const char *file)
 	if (index >= 0)
 	{
 		int res = virtualpbp_remove(index);
-		
+
 		pspSdkSetK1(k1);
 		return res;
 	}
@@ -555,7 +555,7 @@ int sceIoRmdirPatched(const char *path)
 	if (index >= 0)
 	{
 		int res = virtualpbp_rmdir(index);
-		
+
 		pspSdkSetK1(k1);
 		return res;
 	}
@@ -582,7 +582,7 @@ int sceIoMkdirPatched(const char *dir, SceMode mode)
 
 void IoPatches()
 {
-	SceModule2 *mod;
+	SceModule *mod;
 	u32 text_addr;
 
 	mod = sceKernelFindModuleByName("sceIOFileManager");

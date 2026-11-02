@@ -14,7 +14,7 @@ USE_KERNEL_LIBS = 1
 PSP_FW_VERSION = 500
 
 LIBDIR = ../lib
-LIBS = -lpspsystemctrl_kernel -lpsprtc_driver -lpspusb_driver -lpspusbdevice_driver -lpsppower_driver
+LIBS = -lpspsystemctrl_kernel -lpsprtc_driver -lpspusb_driver -lpspusbdevice_driver -lpsppower_driver -lpspkernel
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build_prx.mak

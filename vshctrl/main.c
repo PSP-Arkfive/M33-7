@@ -2,12 +2,14 @@
 #include <pspkernel.h>
 #include <pspsysmem_kernel.h>
 #include <psploadexec_kernel.h>
+#include <pspintrman_kernel.h>
 #include <pspreg.h>
 #include <pspctrl.h>
 #include <psprtc.h>
 #include <pspusb.h>
 #include <pspusbstor.h>
 #include <psppower.h>
+#include <pspsyscon.h>
 #include <umd9660_driver.h>
 #include <isofs_driver.h>
 #include <virtualpbpmgr.h>
@@ -59,13 +61,13 @@ int LoadExecVSHCommonPatched(int apitype, char *file, struct SceKernelLoadExecVS
 	{
 		if (config.executebootbin)
 		{
-			strcpy(file, BOOT_BIN);			
-			param->args = strlen(BOOT_BIN)+1;	
+			strcpy(file, BOOT_BIN);
+			param->args = strlen(BOOT_BIN)+1;
 		}
 		else
-		{		
-			strcpy(file, EBOOT_BIN);			
-			param->args = strlen(EBOOT_BIN)+1;			
+		{
+			strcpy(file, EBOOT_BIN);
+			param->args = strlen(EBOOT_BIN)+1;
 		}
 
 		param->argp = file;
@@ -73,7 +75,7 @@ int LoadExecVSHCommonPatched(int apitype, char *file, struct SceKernelLoadExecVS
 
 		if (config.umdmode == MODE_MARCH33)
 		{
-			sctrlSESetBootConfFileIndex(1);			
+			sctrlSESetBootConfFileIndex(1);
 		}
 		else if (config.umdmode == MODE_NP9660)
 		{
@@ -81,14 +83,14 @@ int LoadExecVSHCommonPatched(int apitype, char *file, struct SceKernelLoadExecVS
 		}
 
 		pspSdkSetK1(k1);
-		return sctrlKernelLoadExecVSHWithApitype(0x120, file, param);	
-	}	
+		return sctrlKernelLoadExecVSHWithApitype(0x120, file, param);
+	}
 
 	else if (strstr(file, "EBOOT.BIN"))
 	{
 		if (config.executebootbin)
 		{
-			strcpy(file, BOOT_BIN);	
+			strcpy(file, BOOT_BIN);
 			param->argp = file;
 		}
 	}
@@ -100,7 +102,7 @@ int LoadExecVSHCommonPatched(int apitype, char *file, struct SceKernelLoadExecVS
 	return sctrlKernelLoadExecVSHWithApitype(apitype, file, param);
 }
 
-int sceRtcGetCurrentClockLocalTimePatched(pspTime *time)
+int sceRtcGetCurrentClockLocalTimePatched(ScePspDateTime *time)
 {
 	int res = sceRtcGetCurrentClockLocalTime(time);
 	int k1 = pspSdkSetK1(0);
@@ -145,7 +147,7 @@ int sceCtrlReadBufferPositivePatched(SceCtrlData *pad_data, int count)
 			}
 		}
 	}
-	
+
 	if (!sceKernelFindModuleByName("VshCtrlSatelite"))
 	{
 		if (!sceKernelFindModuleByName("htmlviewer_plugin_module") &&
@@ -154,7 +156,7 @@ int sceCtrlReadBufferPositivePatched(SceCtrlData *pad_data, int count)
 		{
 			if (pad_data->Buttons & PSP_CTRL_SELECT)
 			{
-				sceKernelSetDdrMemoryProtection((void *)0x08400000, 4*1024*1024, 0xF); 
+				sceKernelSetDdrMemoryProtection((void *)0x08400000, 4*1024*1024, 0xF);
 
 				lmoption.size = sizeof(lmoption);
 				lmoption.mpidtext = 5;
@@ -177,11 +179,11 @@ int sceCtrlReadBufferPositivePatched(SceCtrlData *pad_data, int count)
 						argp = NULL;
 						args = 0;
 					}
-					
+
 					sceKernelStartModule(satelite, args, argp, NULL, NULL);
 
 					pad_data->Buttons &= ~(PSP_CTRL_SELECT);
-				}				
+				}
 			}
 		}
 	}
@@ -218,16 +220,16 @@ int vctrlVSHExitVSHMenu(SEConfig *conf, char *videoiso, int disctype)
 {
 	int k1 = pspSdkSetK1(0);
 	int oldspeed = config.vshcpuspeed;
-	
+
 	vshmenu_ctrl = NULL;
 	memcpy(&config, conf, sizeof(SEConfig));
-	SetConfig(&config);
+	sctrlSESetConfig(&config);
 
 	if (set)
 	{
 		if (config.vshcpuspeed != oldspeed)
-		{		
-			if (config.vshcpuspeed)			
+		{
+			if (config.vshcpuspeed)
 				SetSpeed(config.vshcpuspeed, config.vshbusspeed);
 			else
 				SetSpeed(222, 111);
@@ -245,7 +247,7 @@ int vctrlVSHExitVSHMenu(SEConfig *conf, char *videoiso, int disctype)
 
 		if (!videoiso_mounted)
 		{
-			sctrlSESetDiscOut(1);	
+			sctrlSESetDiscOut(1);
 			videoiso_mounted = 1;
 		}
 		else
@@ -269,7 +271,7 @@ int vctrlVSHExitVSHMenu(SEConfig *conf, char *videoiso, int disctype)
 int sceIoDevctlPatched(const char *dev, unsigned int cmd, void *indata, int inlen, void *outdata, int outlen)
 {
 	int res = sceIoDevctl(dev, cmd, indata, inlen, outdata, outlen);
-	
+
 	if (cmd == 0x01E18030 && videoiso_mounted)
 	{
 		res = 1;
@@ -293,10 +295,10 @@ int GetVersionHook(void *buffer, int bufferlen, int *len)
 
 		*len = sceIoRead(fd, buffer, bufferlen);
 		sceIoClose(fd);
-		
+
 		ret = 0;
 	}
-	
+
 	pspSdkSetK1(k1);
 	return ret;
 }
@@ -311,8 +313,8 @@ int sceUsbStartPatched(const char* driverName, int size, void *args)
 		{
 			return_iso = 1;
 			ReturnToDisc();
-		}		
-		
+		}
+
 		usbdev = sceKernelLoadModule("flash0:/kd/usbdevice.prx", 0, NULL);
 		if (usbdev >= 0)
 		{
@@ -335,7 +337,7 @@ int sceUsbStopPatched(const char* driverName, int size, void *args)
 {
 	int res = sceUsbStop(driverName, size, args);
 	int k1 = pspSdkSetK1(0);
-		
+
 	if (!strcmp(driverName, PSP_USBSTOR_DRIVERNAME) && usbdev >= 0 && config.usbdevice >= 1 && config.usbdevice <= 5)
 	{
 		pspUsbDeviceFinishDevice();
@@ -345,10 +347,10 @@ int sceUsbStopPatched(const char* driverName, int size, void *args)
 			sceKernelUnloadModule(usbdev);
 			usbdev = -1;
 		}
-		
+
 		if (return_iso && config.usbdevice == 5)
 		{
-			sctrlSESetDiscOut(1);	
+			sctrlSESetDiscOut(1);
 			sctrlSEMountUmdFromFile(GetUmdFile(), 0, 0);
 			videoiso_mounted = 1;
 			return_iso = 0;
@@ -374,17 +376,17 @@ void PatchVshMain(u32 text_addr)
 		_sw(NOP, text_addr + 0xEE38);
 		_sw(0x10000023, text_addr + 0xF0D8);
 	}
- 
+
 	IoPatches();
 
-	SceModule2 *mod = sceKernelFindModuleByName("sceVshBridge_Driver");
+	SceModule *mod = sceKernelFindModuleByName("sceVshBridge_Driver");
 
 	if (!config.novshmenu)
 	{
 		MAKE_CALL(mod->text_addr + 0x264, sceCtrlReadBufferPositivePatched);
 		PatchSyscall(FindProc("sceController_Service", "sceCtrl", 0x1F803938), sceCtrlReadBufferPositivePatched);
 	}
-	
+
 	// For umd video iso
 	if (sctrlHENIsTestingTool())
 	{
@@ -397,15 +399,15 @@ void PatchVshMain(u32 text_addr)
 
 	if (config.useversiontxt)
 	{
-		getVersion = FindProc("sceMesgLed", "sceResmgr", 0x9DC14891);
-		PatchSyscall(getVersion, GetVersionHook);
+		getVersion = (void*)FindProc("sceMesgLed", "sceResmgr", 0x9DC14891);
+		PatchSyscall((u32)getVersion, GetVersionHook);
 	}
 
 	PatchSyscall(FindProc("sceUSB_Driver", "sceUsb", 0xAE5DE6AF), sceUsbStartPatched);
 	PatchSyscall(FindProc("sceUSB_Driver", "sceUsb", 0xC2464FA0), sceUsbStopPatched);
 
 	u32 baryon = 0;
-	sceSysconGetBaryonVersion(&baryon);
+	sceSysconGetBaryonVersion((int *)&baryon);
 
 	if (sctrlHENIsTestingTool())
 	{
@@ -426,13 +428,13 @@ void PatchVshMain(u32 text_addr)
 		}
 	}
 
-	ClearCaches();	
+	ClearCaches();
 }
 
 wchar_t verinfo[] = L"5.02 M33  ";
 wchar_t verinfo_tt[] = L"5.02 TestingTool M33  ";
 void PatchSysconfPlugin(u32 text_addr)
-{	
+{
 	int version = sctrlSEGetVersion() & 0xF;
 	if (version)
 	{
@@ -451,23 +453,23 @@ void PatchSysconfPlugin(u32 text_addr)
 	if (sctrlHENIsTestingTool())
 	{
 		u32 version_text = text_addr + 0x24D0C;
-	
+
 		// lui v0, addrhigh
 		_sw(0x3c020000 | (version_text >> 16), text_addr + 0x16EB4);
 		// ori v0, v0, addrlow
 		_sw(0x34420000 | (version_text & 0xFFFF), text_addr + 0x16EB8);
-	
+
 		memcpy((void *) version_text, verinfo_tt, sizeof(verinfo_tt));
 	}
 	else
 	{
 		u32 version_text = text_addr + 0x23DE0;
-	
+
 		// lui v0, addrhigh
 		_sw(0x3c020000 | (version_text >> 16), text_addr + 0x15EE0);
 		// ori v0, v0, addrlow
 		_sw(0x34420000 | (version_text & 0xFFFF), text_addr + 0x15EE4);
-	
+
 		memcpy((void *) version_text, verinfo, sizeof(verinfo));
 	}
 
@@ -484,14 +486,14 @@ void PatchMsVideoMainPlugin(u32 text_addr)
 	_sh(0xfe00, text_addr+0x31D08);
 	_sh(0xfe00, text_addr+0x377A4);
 	_sh(0xfe00, text_addr+0x5EB20);
-	
+
 	// Patch bitrate limit 768+2 (increase to 16384+2)
 	_sh(0x4003, text_addr+0x31B24);
 	_sh(0x4003, text_addr+0x31BB0);
 
 	// Patch bitrate limit 4000 (increase to 16384+2)
 	_sh(0x4003, text_addr+0x373BC);
-	
+
 	ClearCaches();
 }
 
@@ -499,9 +501,9 @@ void PatchGamePlugin(u32 text_addr)
 {
 	if (sctrlHENIsTestingTool())
 	{
-		// New Patch (3.71+)	
+		// New Patch (3.71+)
 		_sw(0x03e00008, text_addr + 0x14140);
-		_sw(0x00001021, text_addr + 0x14144);	
+		_sw(0x00001021, text_addr + 0x14144);
 
 		if (config.hidepics)
 		{
@@ -513,9 +515,9 @@ void PatchGamePlugin(u32 text_addr)
 	}
 	else
 	{
-		// New Patch (3.71+)	
+		// New Patch (3.71+)
 		_sw(0x03e00008, text_addr+0x11764);
-		_sw(0x00001021, text_addr+0x11768);	
+		_sw(0x00001021, text_addr+0x11768);
 
 		if (config.hidepics)
 		{
@@ -525,12 +527,12 @@ void PatchGamePlugin(u32 text_addr)
 			_sw(0x00601021, text_addr+0xF7B4);
 		}
 	}
-	
-	ClearCaches();			
+
+	ClearCaches();
 }
 
 STMOD_HANDLER previous;
-int OnModuleStart(SceModule2 *mod)
+int OnModuleStart(SceModule *mod)
 {
 	char *modname = mod->modname;
 	u32 text_addr = mod->text_addr;
@@ -539,12 +541,12 @@ int OnModuleStart(SceModule2 *mod)
 	{
 		PatchVshMain(text_addr);
 	}
-	
+
 	else if (strcmp(modname, "sysconf_plugin_module") == 0)
 	{
 		PatchSysconfPlugin(text_addr);
 	}
-			
+
 	else if (strcmp(modname, "msvideo_main_plugin_module") == 0)
 	{
 		PatchMsVideoMainPlugin(text_addr);
@@ -552,7 +554,7 @@ int OnModuleStart(SceModule2 *mod)
 
 	else if (strcmp(modname, "game_plugin_module") == 0)
 	{
-		PatchGamePlugin(text_addr);					
+		PatchGamePlugin(text_addr);
 	}
 
 	if (!previous)
@@ -563,8 +565,8 @@ int OnModuleStart(SceModule2 *mod)
 
 int module_start(SceSize args, void *argp)
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceLoadExec");
-	
+	SceModule *mod = sceKernelFindModuleByName("sceLoadExec");
+
 	MAKE_CALL(mod->text_addr + 0x17FC, LoadExecVSHCommonPatched);
 	MAKE_CALL(mod->text_addr + 0x1824, LoadExecVSHCommonPatched);
 	MAKE_CALL(mod->text_addr + 0x1974, LoadExecVSHCommonPatched);
@@ -572,11 +574,11 @@ int module_start(SceSize args, void *argp)
 
 	PatchSyscall(FindProc("sceRTC_Service", "sceRtc", 0xE7C27D1B), sceRtcGetCurrentClockLocalTimePatched);
 
-	sctrlSEGetConfig(&config);	
+	sctrlSEGetConfig(&config);
 
 	if (config.vshcpuspeed != 0)
 		firsttick = sceKernelGetSystemTimeLow();
-	
+
 	ClearCaches();
 
 	previous = sctrlHENSetStartModuleHandler(OnModuleStart);

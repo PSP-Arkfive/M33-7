@@ -8,8 +8,8 @@
 
 #define NOP	0x00000000
 
-#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a); 
-#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a); 
+#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a);
+#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a);
 #define MAKE_SYSCALL(a, n) _sw(SC_OPCODE | (n << 6), a);
 #define JUMP_TARGET(x) (0x80000000 | ((x & 0x03FFFFFF) << 2))
 
@@ -29,6 +29,11 @@ int SetBootFile(int n);
 void ReturnToDisc();
 void Fix150Path(const char *file);
 void Fix5XXPath(const char *file);
+int GetIsoIndex(const char *file);
+
+void SetSpeed(int cpu, int bus);
+
+void IoPatches();
 
 #define FindProc sctrlHENFindFunction
 
