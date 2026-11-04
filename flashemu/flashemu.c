@@ -5,6 +5,8 @@
 #include <pspsysmem_kernel.h>
 #include <pspsysevent.h>
 
+#include <systemctrl.h>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -64,14 +66,14 @@ int SlotGetFree()
 		if (!emu_files[i].allocated)
 			return i;
 	}
-	
+
 	return -1;
 }
 
 int SlotOpen(int slot, char *path, int flags, SceMode mode)
 {
 	WaitMS();
-	
+
 	SceUID fd;
 	while (1)
 	{
@@ -79,10 +81,10 @@ int SlotOpen(int slot, char *path, int flags, SceMode mode)
 			fd = sceIoDopen(path);
 		else
 			fd = sceIoOpen(path, flags, mode);
-			
+
 		if (fd != 0x80010018)
 			break;
-		
+
 		for (int i = 0; i < sizeof(emu_files) / sizeof(emu_files[0]); i++)
 		{
 			if(emu_files[i].allocated && !emu_files[i].closed && emu_files[i].flags == PSP_O_RDONLY)
@@ -95,7 +97,7 @@ int SlotOpen(int slot, char *path, int flags, SceMode mode)
 			}
 		}
 	}
-	
+
 	if (fd > 0)
 	{
 		emu_files[slot].closed = 0;
@@ -106,7 +108,7 @@ int SlotOpen(int slot, char *path, int flags, SceMode mode)
 		if(emu_files[slot].path != path)
 			strncpy(emu_files[slot].path, path, sizeof(emu_files[slot].path));
 	}
-	
+
 	return fd;
 }
 
@@ -126,7 +128,7 @@ SceUID SlotGetFd(int slot)
 		}
 		return emu_files[slot].fd;
 	}
-	
+
 	return -1;
 }
 
@@ -150,7 +152,7 @@ int SlotCloseOneReadOnly()
 			return 0;
 		}
 	}
-	
+
 	UnLock();
 	return 0x80010018;
 }
@@ -160,7 +162,7 @@ static int FlashEmu_IoInit(SceIoDeviceEntry* de)
 	//Kprintf("IoInit.\n");
 	flashemu_sema = sceKernelCreateSema("FlashSema", 0, 1, 1, NULL);
 	memset(emu_files, 0, sizeof(emu_files));
-	
+
 	return 0;
 }
 
@@ -181,7 +183,7 @@ static int open_main(int *argv)
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, file);
-	
+
 	int slot = SlotGetFree();
 	if (slot < 0)
 	{
@@ -206,8 +208,8 @@ static int open_main(int *argv)
 			return ret;
 		}
 	}
-	
-	iob->i_private = (void *) slot;
+
+	iob->arg = (void *) slot;
 	UnLock();
 
 	return 0;
@@ -222,12 +224,12 @@ static int FlashEmu_IoOpen(SceIoIob *iob, char *file, int flags, SceMode mode)
 	argv[2] = (int)flags;
 	argv[3] = (int)mode;
 
-	return sceKernelExtendKernelStack(0x4000, (void *)open_main, (void *)argv);	
+	return sceKernelExtendKernelStack(0x4000, (void *)open_main, (void *)argv);
 }
 
 static int close_main(SceIoIob *iob)
 {
-	int slot = (int)iob->i_private;
+	int slot = (int)iob->arg;
 	SceUID fd = SlotGetFd(slot);
 	if (fd < 0)
 		return fd;
@@ -257,8 +259,8 @@ static int read_main(int *argv)
 	int len = argv[2];
 
 	Lock();
-	
-	SceUID fd = SlotGetFd((int)iob->i_private);
+
+	SceUID fd = SlotGetFd((int)iob->arg);
 	if (fd < 0)
 	{
 		//Kprintf("Error 0x%08X in IoRead\n", fd);
@@ -266,9 +268,9 @@ static int read_main(int *argv)
 
 		return fd;
 	}
-	
+
 	int res = sceIoRead(fd, data, len);
-	
+
 	UnLock();
 
 	return res;
@@ -281,7 +283,7 @@ static int FlashEmu_IoRead(SceIoIob *iob, char *data, int len)
 	argv[0] = (int)iob;
 	argv[1] = (int)data;
 	argv[2] = (int)len;
-	
+
 	return sceKernelExtendKernelStack(0x4000, (void *)read_main, (void *)argv);
 }
 
@@ -292,15 +294,15 @@ static int write_main(int *argv)
 	int len = argv[2];
 
 	Lock();
-	
-	SceUID fd = SlotGetFd((int) iob->i_private);
+
+	SceUID fd = SlotGetFd((int) iob->arg);
 	if (fd < 0)
 	{
 		//Kprintf("Error 0x%08X in IoWrite\n", fd);
 		UnLock();
 		return fd;
 	}
-	
+
 	int res = 0;
 	if (data || len)
 		res = sceIoWrite(fd, data, len);
@@ -317,8 +319,8 @@ static int FlashEmu_IoWrite(SceIoIob *iob, const char *data, int len)
 	argv[0] = (int)iob;
 	argv[1] = (int)data;
 	argv[2] = (int)len;
-	
-	return sceKernelExtendKernelStack(0x4000, (void *)write_main, (void *)argv);	
+
+	return sceKernelExtendKernelStack(0x4000, (void *)write_main, (void *)argv);
 }
 
 static int lseek_main(int *argv)
@@ -328,17 +330,17 @@ static int lseek_main(int *argv)
 	int whence = argv[2];
 
 	Lock();
-	
-	SceUID fd = SlotGetFd((int)iob->i_private);
+
+	SceUID fd = SlotGetFd((int)iob->arg);
 	if (fd < 0)
 	{
 		//Kprintf("Error 0x%08X in IoLseek\n", fd);
 		UnLock();
 		return fd;
 	}
-	
+
 	int res = sceIoLseek(fd, ofs, whence);
-	
+
 	UnLock();
 
 	return res;
@@ -347,7 +349,7 @@ static int lseek_main(int *argv)
 static SceOff FlashEmu_IoLseek(SceIoIob *iob, SceOff ofs, int whence)
 {
 	int argv[3];
-	
+
 	argv[0] = (int)iob;
 	argv[1] = (int)ofs;
 	argv[2] = (int)whence;
@@ -358,9 +360,9 @@ static SceOff FlashEmu_IoLseek(SceIoIob *iob, SceOff ofs, int whence)
 static int FlashEmu_IoIoctl(SceIoIob *iob, unsigned int cmd, void *indata, int inlen, void *outdata, int outlen)
 {
 	int res;
-	
+
 	//Kprintf("Ioctl cmd 0x%08X\n", cmd);
-	
+
 	Lock();
 
 	switch (cmd)
@@ -374,14 +376,14 @@ static int FlashEmu_IoIoctl(SceIoIob *iob, unsigned int cmd, void *indata, int i
 		case 0x00208081: // FW2.00 load prx "/vsh/module/opening_plugin.prx"
 			res = 0;
 			break;
-			
+
 		case 0x00208082: // FW2.80 "/vsh/module/opening_plugin.prx"
 			res = 0x80010016;
 			break;
-			
+
 		case 0x00208013: // ????
 			res = 0;
-			if(sceKernelGetModel() == 0 || iob->i_unit != 3)
+			if(sceKernelGetModel() == 0 || iob->fs_num != 3)
 				res = 0x80010016;
 			break;
 
@@ -404,7 +406,7 @@ static int remove_main(int *argv)
 
 	WaitMS();
 	int res = sceIoRemove(path);
-	
+
 	UnLock();
 	return res;
 }
@@ -415,8 +417,8 @@ static int FlashEmu_IoRemove(SceIoIob *iob, const char *name)
 
 	argv[0] = (int)iob;
 	argv[1] = (int)name;
-	
-	return sceKernelExtendKernelStack(0x4000, (void *)remove_main, (void *)argv);	
+
+	return sceKernelExtendKernelStack(0x4000, (void *)remove_main, (void *)argv);
 }
 
 static int mkdir_main(int *argv)
@@ -449,7 +451,7 @@ static int FlashEmu_IoMkdir(SceIoIob *iob, const char *name, SceMode mode)
 static int rmdir_main(int *argv)
 {
 	const char *name = (const char *)argv[1];
-	
+
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, name);
@@ -466,7 +468,7 @@ static int FlashEmu_IoRmdir(SceIoIob *iob, const char *name)
 	int argv[2];
 
 	argv[0] = (int)iob;
-	argv[1] = (int)name;	
+	argv[1] = (int)name;
 
 	return sceKernelExtendKernelStack(0x4000, (void *)rmdir_main, (void *)argv);
 }
@@ -475,11 +477,11 @@ static int dopen_main(int *argv)
 {
 	SceIoIob *iob = (SceIoIob *)argv[0];
 	const char *dirname = (const char *)argv[1];
-	
+
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, dirname);
-	
+
 	int slot = SlotGetFree();
 	if (slot < 0)
 	{
@@ -504,8 +506,8 @@ static int dopen_main(int *argv)
 			return ret;
 		}
 	}
-	
-	iob->i_private = (void *) slot;
+
+	iob->arg = (void *) slot;
 	UnLock();
 	return 0;
 }
@@ -515,17 +517,17 @@ static int FlashEmu_IoDopen(SceIoIob *iob, const char *dirname)
 	int argv[2];
 
 	argv[0] = (int)iob;
-	argv[1] = (int)dirname;	
+	argv[1] = (int)dirname;
 
 	return sceKernelExtendKernelStack(0x4000, (void *)dopen_main, (void *)argv);
 }
 
 static int dclose_main(SceIoIob *iob)
 {
-	int slot = (int) iob->i_private;
+	int slot = (int) iob->arg;
 
 	Lock();
-	
+
 	SceUID fd = SlotGetFd(slot);
 	if (fd < 0)
 	{
@@ -533,7 +535,7 @@ static int dclose_main(SceIoIob *iob)
 		UnLock();
 		return fd;
 	}
-	
+
 	int res = sceIoDclose(fd);
 	SlotClear(slot);
 
@@ -550,19 +552,19 @@ static int dread_main(int *argv)
 {
 	SceIoIob *iob = (SceIoIob *)argv[0];
 	SceIoDirent *dir = (SceIoDirent *)argv[1];
-	
+
 	Lock();
-	
-	SceUID fd = SlotGetFd((int) iob->i_private);
+
+	SceUID fd = SlotGetFd((int) iob->arg);
 	if (fd < 0)
 	{
 		//Kprintf("Error 0x%08X in IoDread, file %s\n", fd, path);
 		UnLock();
 		return fd;
 	}
-	
+
 	int res = sceIoDread(fd, dir);
-	
+
 	UnLock();
 
 	return res;
@@ -574,7 +576,7 @@ static int FlashEmu_IoDread(SceIoIob *iob, SceIoDirent *dir)
 
 	argv[0] = (int)iob;
 	argv[1] = (int)dir;
-	
+
 	return sceKernelExtendKernelStack(0x4000, (void *)dread_main, (void *)argv);
 }
 
@@ -582,7 +584,7 @@ static int getstat_main(int *argv)
 {
 	const char *file = (const char *)argv[1];
 	SceIoStat *stat = (SceIoStat *)argv[2];
-	
+
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, file);
@@ -620,7 +622,7 @@ static int chstat_main(int *argv)
 	const char *file = (const char *)argv[1];
 	SceIoStat *stat = (SceIoStat *)argv[2];
 	int bits = (int)argv[3];
-	
+
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, file);
@@ -647,12 +649,12 @@ static int FlashEmu_IoChstat(SceIoIob *iob, const char *file, SceIoStat *stat, i
 static int rename_main(int *argv)
 {
 	const char *oldname = (const char *)argv[1];
-	const char *newname = (const char *)argv[2];	
-	
+	const char *newname = (const char *)argv[2];
+
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, oldname);
-	
+
 	WaitMS();
 	int res = sceIoRename(oldname, newname);
 
@@ -674,7 +676,7 @@ static int FlashEmu_IoRename(SceIoIob *iob, const char *oldname, const char *new
 static int chdir_main(int *argv)
 {
 	const char *dir = (const char *)argv[1];
-	
+
 	Lock();
 	strcpy(path, DC_PATH);
 	strcat(path, dir);
@@ -691,7 +693,7 @@ static int FlashEmu_IoChdir(SceIoIob *iob, const char *dir)
 	int argv[2];
 
 	argv[0] = (int)iob;
-	argv[1] = (int)dir;	
+	argv[1] = (int)dir;
 
 	return sceKernelExtendKernelStack(0x4000, (void *)chdir_main, (void *)argv);
 }
@@ -704,7 +706,7 @@ static int FlashEmu_IoMount(SceIoIob *iob)
 
 static int FlashEmu_IoUmount(SceIoIob *iob)
 {
-	//Kprintf("IoUmount, i_unit %d\n", iob->i_unit);
+	//Kprintf("IoUmount, fs_num %d\n", iob->fs_num);
 	return 0;
 }
 
@@ -717,10 +719,10 @@ static int FlashEmu_IoDevctl(SceIoIob *iob, const char *devname, unsigned int cm
 		case 0x00005802:
 			res = 0;
 			break;
-			
+
 		case 0x00208813:
 			res = 0;
-			if (sceKernelGetModel() == 0 || iob->i_unit != 3)
+			if (sceKernelGetModel() == 0 || iob->fs_num != 3)
 				return 0x80010016;
 
 		default:
@@ -816,8 +818,11 @@ static SceIoDeviceTable fake =
 	&fake_funcs
 };
 
-int SceLfatfsAssign()
+int SceLfatfsAssign(SceSize args, void *argp)
 {
+	(void) args;
+	(void) argp;
+
 	WaitMS();
 	sceIoAssign("flash0:", "lflash0:0,0", "flashfat0:", IOASSIGN_RDONLY, NULL, 0);
 	sceIoAssign("flash1:", "lflash0:0,1", "flashfat1:", IOASSIGN_RDWR, NULL, 0);
@@ -857,7 +862,7 @@ int SysEventHandlerFunc(int ev_id, char *ev_name, void *param, int *result)
 		need_wait = 1;
 		break;
 	}
-	
+
 	return 0;
 
 }
@@ -879,7 +884,7 @@ int InstallFlashEmu()
 	sceKernelRegisterSysEventHandler(&sys_event_handler);
 	assign_thread = sceKernelCreateThread("SceLfatfsAssign", SceLfatfsAssign, 100, 0x1000, 0x100000, NULL);
 	sceKernelStartThread(assign_thread, 0, NULL);
-	
+
 	return 0;
 }
 

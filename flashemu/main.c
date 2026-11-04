@@ -20,8 +20,8 @@ PSP_MAIN_THREAD_ATTR(0);
 
 #define NOP	0x00000000
 
-#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) & 0x3FFFFFFF) >> 2), a); 
-#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x3FFFFFFF) >> 2), a); 
+#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) & 0x3FFFFFFF) >> 2), a);
+#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x3FFFFFFF) >> 2), a);
 #define MAKE_SYSCALL(a, n) _sw(SC_OPCODE | (n << 6), a);
 #define JUMP_TARGET(x) ((x & 0x3FFFFFFF) << 2)
 #define REDIRECT_FUNCTION(a, f) _sw(J_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a);  _sw(NOP, a+4);
@@ -47,7 +47,7 @@ void SystemControlPatch()
 		case 1: rbtx = &rebootex_02g; break;
 		case 2: rbtx = &rebootex_03g; break;
 	}
-	
+
 	sctrlHENSetRebootexOverride(rbtx);
 }
 
@@ -98,11 +98,11 @@ int sceMSFAT_IoDevctlPatched(int type, void (*cb)(void *), void *arg)
 
 STMOD_HANDLER previous = NULL;
 
-int OnModuleStart(SceModule2 *module)
+int OnModuleStart(SceModule *module)
 {
 	if (strcmp(module->modname, "sceMediaSync") == 0)
 	{
-		u32 text_addr = ((SceModule2 *)sceKernelFindModuleByName("sceMSFAT_Driver"))->text_addr;
+		u32 text_addr = ((SceModule *)sceKernelFindModuleByName("sceMSFAT_Driver"))->text_addr;
 		MAKE_CALL(text_addr + 0x48D4, sceMSFAT_IoOpenPatched);
 		MAKE_CALL(text_addr + 0x5338, sceMSFAT_IoDopenPatched);
 		MAKE_CALL(text_addr + 0x5B90, sceMSFAT_IoDevctlPatched);
@@ -130,7 +130,7 @@ int module_start(SceSize args, void *argp)
 	InstallFlashEmu();
 	previous = sctrlHENSetStartModuleHandler(OnModuleStart);
 	ClearCaches();
-	
+
 	return 0;
 }
 
