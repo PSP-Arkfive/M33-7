@@ -52,7 +52,7 @@ EXTRA_CLEAN += $(TARGET).elf
 ifdef PRX_EXPORTS
 EXPORT_OBJ=$(patsubst %.exp,%.o,$(PRX_EXPORTS))
 EXTRA_CLEAN += $(EXPORT_OBJ)
-else 
+else
 EXPORT_OBJ=$(PSPSDK)/lib/prxexports.o
 endif
 else
@@ -62,7 +62,7 @@ endif
 # Library selection.  By default we link with Newlib's libc.  Allow the
 # user to link with PSPSDK's libc if USE_PSPSDK_LIBC is set to 1.
 
-PSPSDK_LIBC_LIB = 
+PSPSDK_LIBC_LIB =
 
 # Link with following default libraries.  Other libraries should be specified in the $(LIBS) variable.
 # TODO: This library list needs to be generated at configure time.
@@ -161,7 +161,7 @@ $(TARGET_LIB): $(OBJS)
 	$(AR) cru $@ $(OBJS)
 	$(RANLIB) $@
 
-$(PSP_EBOOT_SFO): 
+$(PSP_EBOOT_SFO):
 	$(MKSFO) '$(PSP_EBOOT_TITLE)' $@
 
 ifeq ($(BUILD_PRX),1)
@@ -184,7 +184,7 @@ endif
 %.c: %.exp
 	psp-build-exports -b $< > $@
 
-clean: 
+clean:
 	-rm -f $(FINAL_TARGET) $(EXTRA_CLEAN) $(OBJS) $(PSP_EBOOT_SFO) $(PSP_EBOOT) $(EXTRA_TARGETS)
 
 rebuild: clean all

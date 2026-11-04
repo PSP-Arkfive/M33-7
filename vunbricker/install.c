@@ -567,8 +567,9 @@ const char *spec_03g_m33[] =
 	"kd/pspbtcnf_03g_recovery.bin"
 };
 
-int LoadUpdaterModules()
+int LoadUpdaterModules(int fw)
 {
+	(void) fw;
 	SceUID mod = sceKernelLoadModule("flash0:/kd/emc_sm_updater.prx", 0, NULL);
 	if (mod < 0 && mod != SCE_KERNEL_ERROR_EXCLUSIVE_LOAD)
 		return 1;
@@ -634,7 +635,7 @@ int LoadUpdaterModules()
 void SetInstallProgress(int value, int max, int force, int fw)
 {
 	u32 prog;
-	
+
 	prog = ((((fw == FW_OFW) ? 95 : 93) * value) / max) + 4;
 
 	SetProgress(prog, force);
@@ -645,7 +646,7 @@ char upd_error_msg[256];
 int OnInstallError(void *param)
 {
 	int fw = *(int *)param;
-	
+
 	vlfGuiMessageDialog(upd_error_msg, VLF_MD_TYPE_ERROR | VLF_MD_BUTTONS_NONE);
 
 	vlfGuiRemoveText(status);
@@ -674,7 +675,7 @@ int OnInstallError(void *param)
 void InstallError(int fw, char *fmt, ...)
 {
 	va_list list;
-	
+
 	va_start(list, fmt);
 	vsprintf(upd_error_msg, fmt, list);
 	va_end(list);
@@ -706,7 +707,7 @@ int OnInstallComplete(void *param)
 	}
 
 	progress_bar = -1;
-	progress_text = -1;	
+	progress_text = -1;
 
 	return VLF_EV_RET_REMOVE_HANDLERS;
 }
@@ -794,7 +795,7 @@ void DisablePlugins()
 	u8 conf[15];
 
 	memset(conf, 0, 15);
-	
+
 	WriteFile("ms0:/seplugins/conf.bin", conf, 15);
 }
 
@@ -808,19 +809,19 @@ void CopyFileList(int fw, const char **list, int file_count, int start_file_coun
 		strcpy(dest, "flach0:/");
 		strcat(src, list[i]);
 		strcat(dest, list[i]);
-		
+
 		SceUID fdi = sceIoOpen(src, PSP_O_RDONLY, 0);
 		if (fdi < 0)
 		{
 			InstallError(fw, "Error opening %s: 0x%08X", src, fdi);
 		}
-		
+
 		SceUID fdo = sceIoOpen(dest, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
 		if (fdo < 0)
 		{
 			InstallError(fw, "Error opening %s: 0x%08X", dest, fdo);
 		}
-		
+
 		char signechecked = 0;
 		while (1)
 		{
@@ -831,7 +832,7 @@ void CopyFileList(int fw, const char **list, int file_count, int start_file_coun
 			}
 			if (!read)
 				break;
-		
+
 			if (!signechecked &&
 				(memcmp(&list[i][strlen(list[i]) - 4], ".prx", 4) == 0 ||
 				memcmp(list[i], "kd/pspbtcnf", 11) == 0))
@@ -845,7 +846,7 @@ void CopyFileList(int fw, const char **list, int file_count, int start_file_coun
 				InstallError(fw, "Error writing %s", dest);
 			}
 		}
-		
+
 		sceIoClose(fdi);
 		sceIoClose(fdo);
 
@@ -856,14 +857,14 @@ void CopyFileList(int fw, const char **list, int file_count, int start_file_coun
 
 int install_thread(SceSize args, void *argp)
 {
-	int fw = *(int *)argp;	
+	int fw = *(int *)argp;
 	char *argv[2];
 	int res;
 	int size;
 	int model = kuKernelGetModel();
 
 	dcSetCancelMode(1);
-	
+
 	switch(LoadUpdaterModules(fw))
 	{
 		case 0: break;
@@ -927,17 +928,17 @@ int install_thread(SceSize args, void *argp)
 	res = sceIoAssign("flach0:", "lflach0:0,0", "flachfat0:", IOASSIGN_RDWR, NULL, 0);
 	if (res < 0)
 	{
-		InstallError(fw, "Flash0 assign failed: 0x%08X", res);  
+		InstallError(fw, "Flash0 assign failed: 0x%08X", res);
 	}
 
 	res = sceIoAssign("flach1:", "lflach0:0,1", "flachfat1:", IOASSIGN_RDWR, NULL, 0);
 	if (res < 0)
 	{
-		InstallError(fw, "Flash1 assign failed: 0x%08X", res);  
+		InstallError(fw, "Flash1 assign failed: 0x%08X", res);
 	}
 
 	sceIoAssign("flach2:", "lflach0:0,2", "flachfat2:", IOASSIGN_RDWR, NULL, 0);
-	
+
 	sceKernelDelayThread(1200000);
 	SetProgress(3, 1);
 
@@ -952,7 +953,7 @@ int install_thread(SceSize args, void *argp)
 	SetProgress(4, 1);
 
 	SetStatus("Flashing files...");
-	
+
 	int file_count = sizeof(common) / sizeof(common[0]);
 	if (fw == FW_TT_M33)
 		file_count += sizeof(common_testingtool) / sizeof(common_testingtool[0]);
@@ -983,7 +984,7 @@ int install_thread(SceSize args, void *argp)
 		default:
 			InstallError(fw, "Unsupported model.");
 	}
-	
+
 	int ctr = 0;
 	CopyFileList(fw, common, sizeof(common) / sizeof(common[0]), ctr, file_count);
 	ctr += sizeof(common) / sizeof(common[0]);
@@ -1007,7 +1008,7 @@ int install_thread(SceSize args, void *argp)
 		CopyFileList(fw, slim_retail, sizeof(slim_retail) / sizeof(slim_retail[0]), ctr, file_count);
 		ctr += sizeof(slim_retail) / sizeof(slim_retail[0]);
 	}
-	
+
 	switch (model)
 	{
 		case 0:
@@ -1040,7 +1041,7 @@ int install_thread(SceSize args, void *argp)
 		default:
 			InstallError(fw, "Unsupported model.");
 	}
-	
+
 
 	sceKernelDelayThread(200000);
 	SetInstallProgress(1, 1, 1, fw);
@@ -1059,14 +1060,14 @@ int install_thread(SceSize args, void *argp)
 	res = ReadFile("flash2:/registry/act.dat", 0, sm_buffer1, SMALL_BUFFER_SIZE);
 	if (res > 0)
 	{
-		WriteFile("flach2:/act.dat", sm_buffer1, res);		
+		WriteFile("flach2:/act.dat", sm_buffer1, res);
 	}
 
 	SetStatus("Flashing IPL... ");
-	
+
 	const char *ipl_name = 0;
 	u16 ipl_key = 0;
-	
+
 	if (fw == FW_OFW)
 	{
 		switch (model)
@@ -1093,12 +1094,12 @@ int install_thread(SceSize args, void *argp)
 	{
 		InstallError(fw, "Cannot read nandipl\n");
 	}
-	
+
 	dcPatchModuleString("IoPrivileged", "IoPrivileged", "IoPrivileged");
 
 	if (pspIplUpdateClearIpl() < 0)
 		InstallError(fw, "Error in pspIplUpdateClearIpl");
-	
+
 	if (pspIplUpdateSetIpl(big_buffer, size, ipl_key) < 0)
 		InstallError(fw, "Error in pspIplUpdateSetIpl");
 
@@ -1126,7 +1127,7 @@ int install_thread(SceSize args, void *argp)
 		int ctr = 0;
 		CopyFileList(fw, common_m33, sizeof(common_m33) / sizeof(common_m33[0]), ctr, file_count);
 		ctr += sizeof(common_m33) / sizeof(common_m33[0]);
-		
+
 		switch (model)
 		{
 			case 0:
@@ -1144,13 +1145,13 @@ int install_thread(SceSize args, void *argp)
 			default:
 				InstallError(fw, "Unsupported model.");
 		}
-		
+
 		DisablePlugins();
 
 		res = ReadFile("flash1:/config.se", 0, sm_buffer1, SMALL_BUFFER_SIZE);
 		if (res > 0)
 		{
-			WriteFile("flach1:/config.se", sm_buffer1, res);		
+			WriteFile("flach1:/config.se", sm_buffer1, res);
 		}
 	}
 
@@ -1165,7 +1166,7 @@ int Install(int fw)
 	ClearProgress();
 	status = vlfGuiAddText(80, 100, "Loading updater modules...");
 
-	progress_bar = vlfGuiAddProgressBar(136);	
+	progress_bar = vlfGuiAddProgressBar(136);
 	progress_text = vlfGuiAddText(240, 148, "0%");
 	vlfGuiSetTextAlignment(progress_text, VLF_ALIGNMENT_CENTER);
 
