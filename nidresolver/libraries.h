@@ -3,7 +3,7 @@
 
 #include <nidresolver.h>
 
-Nids SysMemForKernel[] = 
+Nids SysMemForKernel[] =
 {
 	{ 0x1C1FBFE7, 0x4F47A4AD },
 	{ 0x002BA296, 0x28CDFAEC },
@@ -103,7 +103,7 @@ Nids SysMemForKernel[] =
 	{ 0xEF2EE8C1, 0x5EF3AE22 },
 };
 
-Nids KDebugForKernel[] = 
+Nids KDebugForKernel[] =
 {
 	{ 0xA2983280, 0x88696B57 },
 	{ 0x2FF4E9F9, 0xF95B3F19 },
@@ -133,7 +133,7 @@ Nids KDebugForKernel[] =
 	{ 0x24C32559, 0xCB91D8EA },
 };
 
-Nids LoadCoreForKernel[] = 
+Nids LoadCoreForKernel[] =
 {
 	{ 0x99A695F0, 0x1285603B },
 	{ 0x9BAF90F6, 0xCE2B6937 },
@@ -176,7 +176,7 @@ Nids LoadCoreForKernel[] =
 	{ 0x54AB2675, 0x23C81B66 },
 };
 
-Nids ExceptionManagerForKernel[] = 
+Nids ExceptionManagerForKernel[] =
 {
 	{ 0x5A837AD4, 0x792C424C },
 	{ 0x565C0B0E, 0xCF57A486 },
@@ -187,7 +187,7 @@ Nids ExceptionManagerForKernel[] =
 	{ 0xFC26C354, 0xD74DECBB },
 };
 
-Nids InterruptManagerForKernel[] = 
+Nids InterruptManagerForKernel[] =
 {
 	{ 0x85F7766D, 0x77535C3E },
 	{ 0x15894D0B, 0x7527A9BA },
@@ -232,7 +232,7 @@ Nids InterruptManagerForKernel[] =
 	{ 0x72CE22E8, 0x8A1D8CCA },
 };
 
-Nids IoFileMgrForKernel[] = 
+Nids IoFileMgrForKernel[] =
 {
 	{ 0xA905B705, 0xDB0064BD },
 	{ 0x3C54E908, 0x30DA4775 },
@@ -246,7 +246,7 @@ Nids IoFileMgrForKernel[] =
 	{ 0xBD17474F, 0xFFE9FFDE },
 };
 
-Nids ModuleMgrForKernel[] = 
+Nids ModuleMgrForKernel[] =
 {
 	{ 0x6DE9FF11, 0xE44F8DA5 },
 	{ 0xA1A78C58, 0x7C8A2B62 },
@@ -298,7 +298,7 @@ Nids ModuleMgrForKernel[] =
 	{ 0x61EC6AB0, 0xEADBAF9E },
 };
 
-Nids LoadExecForKernel[] = 
+Nids LoadExecForKernel[] =
 {
 	{ 0xA3D5E142, 0x94A1C627 },
 	{ 0x4AC57943, 0x6C7C44DA },
@@ -322,7 +322,7 @@ Nids LoadExecForKernel[] =
 	{ 0xD9739B89, 0x71F9FB1B },
 };
 
-Nids sceDdr_driver[] = 
+Nids sceDdr_driver[] =
 {
 	{ 0x286E1372, 0x647FEC11 },
 	{ 0x6078F911, 0xC6B7CCDE },
@@ -339,7 +339,7 @@ Nids sceDdr_driver[] =
 	{ 0x4CE55E76, 0xB639BE04 },
 };
 
-Nids sceDmacplus_driver[] = 
+Nids sceDmacplus_driver[] =
 {
 	{ 0xC748491D, 0x78ED5F43 },
 	{ 0xA7B05225, 0x61989D3A },
@@ -396,7 +396,7 @@ Nids sceDmacplus_driver[] =
 	{ 0x97DCBBBF, 0x7A9001AF },
 };
 
-Nids sceGpio_driver[] = 
+Nids sceGpio_driver[] =
 {
 	{ 0xCA8BE2EA, 0xFF5E7843 },
 	{ 0x37C8DADC, 0x54F1F60E },
@@ -412,7 +412,7 @@ Nids sceGpio_driver[] =
 	{ 0x4250D44A, 0xA908E0BE },
 };
 
-Nids sceSysreg_driver[] = 
+Nids sceSysreg_driver[] =
 {
 	{ 0xC29D614E, 0x26D97F66 },
 	{ 0xDC6139A4, 0x36DA035E },
@@ -569,7 +569,7 @@ Nids sceSysreg_driver[] =
 	{ 0x07881A0B, 0xCD36673C },
 };
 
-Nids sceSyscon_driver[] = 
+Nids sceSyscon_driver[] =
 {
 	{ 0x64FA0B22, 0x72FF305F },
 	{ 0x58531E69, 0x31BC4FB0 },
@@ -682,7 +682,7 @@ Nids sceSyscon_driver[] =
 	{ 0xC8439C57, 0x638AE5B6 },
 };
 
-Nids sceDisplay_driver[] = 
+Nids sceDisplay_driver[] =
 {
 	{ 0x63E22A26, 0xE4A61BA0 },
 	{ 0x5B5AEFAD, 0x85E81690 },
@@ -726,7 +726,7 @@ Nids sceDisplay_driver[] =
 	{ 0xE8466BC2, 0x34E00E94 },
 };
 
-Nids sceDve_driver[] = 
+Nids sceDve_driver[] =
 {
 	{ 0x0836B2B5, 0xE389D7FF },
 	{ 0x17BC42E4, 0xADE05167 },
@@ -752,7 +752,7 @@ Nids sceDve_driver[] =
 	{ 0x292F15DA, 0xE35A4B28 },
 };
 
-Nids sceGe_driver[] = 
+Nids sceGe_driver[] =
 {
 	{ 0xE0D68148, 0x65FA79F8 },
 	{ 0x71FCD1D6, 0xF937C5DF },
@@ -790,7 +790,7 @@ Nids sceGe_driver[] =
 	{ 0xC576E897, 0x244A3948 },
 };
 
-Nids sceCtrl_driver[] = 
+Nids sceCtrl_driver[] =
 {
 	{ 0x1F4011E6, 0x87B0677D },
 	{ 0xDA6B76A1, 0x6D4BEA72 },
@@ -828,7 +828,7 @@ Nids sceCtrl_driver[] =
 	{ 0xFF847C31, 0xF54317C4 },
 };
 
-Nids sceUmd[] = 
+Nids sceUmd[] =
 {
 	{ 0x659587F7, 0x10542751 },
 	{ 0xAE53DC2D, 0x085E7AFF },
@@ -865,7 +865,7 @@ Nids sceUmd[] =
 	{ 0xF2D0EDFB, 0xE9586C03 },
 };
 
-Nids sceHprm_driver[] = 
+Nids sceHprm_driver[] =
 {
 	{ 0xC7154136, 0x14B80157 },
 	{ 0xFD7DE6CD, 0x976C0C73 },
@@ -893,7 +893,7 @@ Nids sceHprm_driver[] =
 	{ 0x133DE8FA, 0xC6591045 },
 };
 
-Nids scePower_driver[] = 
+Nids scePower_driver[] =
 {
 	{ 0x04B7766E, 0xAF23EFA6 },
 	{ 0xDFA8BAF8, 0x5EE66C30 },
@@ -981,7 +981,7 @@ Nids scePower_driver[] =
 	{ 0xFEE03A2F, 0xFDB5BFE9 },
 };
 
-Nids sceImpose_driver[] = 
+Nids sceImpose_driver[] =
 {
 	{ 0x9C8C6C81, 0xC860DB52 },
 	{ 0x36AA6E91, 0x098A66AE },
@@ -1009,7 +1009,7 @@ Nids sceImpose_driver[] =
 	{ 0x86924032, 0x24ADE3CD },
 };
 
-Nids sceRtc_driver[] = 
+Nids sceRtc_driver[] =
 {
 	{ 0x9763C138, 0x40E624E3 },
 	{ 0x7D1FBED3, 0xADAF231F },
@@ -1054,7 +1054,7 @@ Nids sceRtc_driver[] =
 	{ 0xE6605BCA, 0x8606E5FF },
 };
 
-Nids sceReg_driver[] = 
+Nids sceReg_driver[] =
 {
 	{ 0x98279CF1, 0xED17832B },
 	{ 0x9B25EDF1, 0xCBBB6574 },
@@ -1079,24 +1079,24 @@ Nids sceReg_driver[] =
 	{ 0x0CAE832B, 0xC2E5E478 },
 };
 
-Nids memlmd[] = 
+Nids memlmd[] =
 {
 	{ 0x323366CA, 0x2159F4BB },
 	{ 0x1570BAB4, 0xFD379991 },
 	{ 0x7CF1CD3E, 0xB05E960B },
 };
 
-Nids sceMesgLed_driver[] = 
+Nids sceMesgLed_driver[] =
 {
 	{ 0xDFF0F308, 0x5360DC52 },
 };
 
-Nids sceClockgen_driver[] = 
+Nids sceClockgen_driver[] =
 {
 	{ 0x4EB657D5, 0xD1A8E10E },
 };
 
-Nids sceCodec_driver[] = 
+Nids sceCodec_driver[] =
 {
 	{ 0x20C61103, 0x1D80837C },
 };
