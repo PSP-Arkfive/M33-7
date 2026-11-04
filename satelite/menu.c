@@ -112,7 +112,7 @@ int menu_setup(SEConfig *conf, VideoIso *isos, int nisos, int *sel)
 	config = conf;
 	nvideoisos = nisos;
 	selected = sel;
-	
+
 	for(i = 0;i < TMENU_MAX; i++)
 	{
 		item_str[i] = NULL;
@@ -156,7 +156,7 @@ int menu_setup(SEConfig *conf, VideoIso *isos, int nisos, int *sel)
 			config->usbdevice = 0;
 			configchanged = 1;
 		}
-		
+
 		paf_strcpy(usb_device, "Memory Stick");
 	}
 
@@ -200,7 +200,7 @@ int menu_draw(void)
 	int menu_len;
 	int max_menu;
 	int *coords;
-	
+
 	if(blit_setup() < 0) return -1;
 
 	if (pwidth == 720)
@@ -212,7 +212,7 @@ int menu_draw(void)
 	blit_string(coords[0], coords[1], "M33 VSH MENU");
 
 	// menu title & list
-	menu_len  = 15; 
+	menu_len  = 15;
 	for(max_menu = 0;max_menu < TMENU_MAX; max_menu++)
 	{
 		fc = 0xffffff;
@@ -241,7 +241,7 @@ int menu_draw(void)
 				x = coords[5];
 			}
 
-			blit_string(x,(coords[6]+max_menu)*8,msg);			
+			blit_string(x,(coords[6]+max_menu)*8,msg);
 
 			msg = item_str[max_menu];
 			if(msg)
@@ -269,7 +269,7 @@ int menu_ctrl(u32 buttons,u32 button_on)
 	int direction;
 	int index;
 	//
-	// check buttons 
+	// check buttons
 	//
 	button_on &=
 		PSP_CTRL_SELECT|PSP_CTRL_START|
@@ -302,11 +302,11 @@ int menu_ctrl(u32 buttons,u32 button_on)
 	{
 		if (!configchanged && direction && menu_sel != 4)
 			configchanged = 1;
-		
+
 		switch(menu_sel)
 		{
 			case 0:
-				
+
 				if (direction)
 				{
 					index = limit(GetCpuIndex(config->vshcpuspeed)+direction, 0, MAX_CPU_SPEEDS-1);
@@ -317,18 +317,18 @@ int menu_ctrl(u32 buttons,u32 button_on)
 			break;
 
 			case 1:
-				
+
 				if (direction)
 				{
 					index = limit(GetCpuIndex(config->umdisocpuspeed)+direction, 0, MAX_CPU_SPEEDS-1);
 					config->umdisocpuspeed = cpu_speeds[index];
 					config->umdisobusspeed = bus_speeds[index];
 				}
-				
+
 			break;
 
 			case 2:
-				
+
 				if (direction)
 				{
 					config->usbdevice = limit(config->usbdevice+direction, 0, 5);
@@ -337,7 +337,7 @@ int menu_ctrl(u32 buttons,u32 button_on)
 			break;
 
 			case 3:
-				
+
 				if (direction > 0)
 				{
 					if (config->umdmode == MODE_UMD)
@@ -380,7 +380,7 @@ int menu_ctrl(u32 buttons,u32 button_on)
 
 			case (TMENU_MAX-1):
 
-				if(direction == 0) 
+				if(direction == 0)
 				{
 					return 0; // finish
 				}

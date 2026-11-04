@@ -45,9 +45,9 @@ static u32 adjust_alpha(u32 col)
 //int blit_setup(int sx,int sy,const char *msg,int fg_col,int bg_col)
 int blit_setup(void)
 {
-	int unk;
+	int unk = 0;
 	sceDisplayGetMode(&unk, &pwidth, &pheight);
-	sceDisplayGetFrameBuf((void*)&vram32, &bufferwidth, &pixelformat, &unk);
+	sceDisplayGetFrameBuf((void*)&vram32, &bufferwidth, &pixelformat, unk);
 	if( (bufferwidth==0) || (pixelformat!=3)) return -1;
 
 	fcolor = 0x00ffffff;
@@ -87,7 +87,7 @@ int blit_string(int sx,int sy,const char *msg)
 	u32 alpha;
 
 	fg_col = adjust_alpha(fcolor);
-	bg_col = adjust_alpha(bcolor);	
+	bg_col = adjust_alpha(bcolor);
 
 //Kprintf("MODE %d WIDTH %d\n",pixelformat,bufferwidth);
 	if( (bufferwidth==0) || (pixelformat!=3)) return -1;
@@ -98,7 +98,7 @@ int blit_string(int sx,int sy,const char *msg)
 		for(y = 0; y < (8*charsize); y++)
 		{
 			if (pheight == 503) // composite or component-interlace
-			{			
+			{
 				if (((sy+y) & 1))
 				{
 					offset = (((sy+y) / 2)+262) * bufferwidth + sx+x*(8*charsize);
@@ -113,7 +113,7 @@ int blit_string(int sx,int sy,const char *msg)
 				offset = (sy+y) * bufferwidth + sx+x*(8*charsize);
 			}
 
-			if (charsize == 2)			
+			if (charsize == 2)
 				font = y>=15 ? 0x00 : msx[code*8 + y/2];
 			else
 				font = y>=7 ? 0x00 : msx[code*8 + y];
@@ -122,10 +122,10 @@ int blit_string(int sx,int sy,const char *msg)
 			{
 				col = (font & 0x80) ? fg_col : bg_col;
 				alpha = col>>24;
-				if(alpha==0 || pheight == 503) 
+				if(alpha==0 || pheight == 503)
 				{
 					vram32[offset] = col;
-					
+
 					if (charsize == 2)
 						vram32[offset+1] = col;
 				}

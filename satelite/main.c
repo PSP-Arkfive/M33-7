@@ -2,12 +2,12 @@
 #include <pspuser.h>
 #include <pspctrl.h>
 #include <pspdisplay.h>
-// #include <psppaf.h>
 #include <psppower.h>
 
 #include <systemctrl_se.h>
 #include <vshctrl.h>
 
+#include "psppaf.h"
 #include "videoiso.h"
 
 PSP_MODULE_INFO("VshCtrlSatelite", 0, 1, 0);
@@ -37,6 +37,10 @@ static int inited = 0;
 
 extern char buf[192];
 extern int configchanged;
+
+int menu_setup(SEConfig *conf, VideoIso *isos, int nisos, int *sel);
+int menu_ctrl(u32 buttons,u32 button_on);
+int menu_draw(void);
 
 int CtrlHooked(SceCtrlData *pad_data, int count)
 {
@@ -221,7 +225,7 @@ int module_start(SceSize args, void *argp)
 
 int module_stop(SceSize args, void *argp)
 {
-	u32 timeout = 100000;
+	SceUInt timeout = 100000;
 
 	stopit = 1;
 
