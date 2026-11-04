@@ -20,7 +20,7 @@ PSP_MODULE_INFO("pspLflashFdisk", 0x1007, 1, 0);
 typedef struct PartitionStruct
 {
 	int partsize;
-	int _4;	
+	int _4;
 } PartitionStruct;
 
 typedef struct LflashParam
@@ -35,7 +35,7 @@ typedef struct LflashParam
     int blocks; // 0x14
     int bsize;  // 0x18
     int bits;   // 0x1C
-    int flags;  // 0x20    
+    int flags;  // 0x20
     char vendor[0x10];  // 0x24
     char product[0x10]; // 0x34
 } LflashParam;
@@ -54,7 +54,7 @@ void InitVars()
 {
 	debug = 0;
 	lba = 0;
-	
+
 	memset(device, 0, sizeof(device));
 	memset(&lflash_param, 0, sizeof(lflash_param));
 	memset(buffer, 0, sizeof(buffer));
@@ -68,7 +68,7 @@ void InitVars()
 }
 
 int AddPartition(int size)
-{	
+{
 	if (numpart >= 16)
 	{
 		// Kprintf("Too many partitions.\n");
@@ -77,7 +77,7 @@ int AddPartition(int size)
 
 	partitions[numpart].partsize = size;
 	numpart++;
-	
+
 	return 0;
 }
 
@@ -111,13 +111,13 @@ int SetCHS(u8 *chs, int unk1)
 	cs2 = (unk1 / numsectors) / numheads;
 	h = (unk1 / numsectors) % numheads;
 	y = (unk1 % numsectors) & 0x3F;
-	
+
 	if (cs2 >= maxsectors)
 	{
 		cs2 = maxsectors-1;
 		res = 1;
 	}
-	
+
 	cs1 = ((cs2 & 0x300) >> 2) | y;
 
 	chs[0] = h;
@@ -128,12 +128,12 @@ int SetCHS(u8 *chs, int unk1)
 }
 
 int create_partition_record(u8 *partRec, int unk1, u32 partLen, int isExtPart, int unk4) // create primary partition??
-{    
+{
     int res1 = SetCHS(partRec+1, unk1); // CHS of first sector of partition
     int res2 = SetCHS(partRec+5, unk1+partLen-1); // CHS of last sector of partition
-	u32 sectorsbefore;  
+	u32 sectorsbefore;
 	int partType;
-	
+
 	if (isExtPart) // is an extended partition
     {
         if ((res1 + res2 == 0) && (lba == 0))
@@ -141,7 +141,7 @@ int create_partition_record(u8 *partRec, int unk1, u32 partLen, int isExtPart, i
         else
             partType = 0xF; // LBA-mapped Extended partition
     }
-    else 
+    else
     {
         if ((res1 + res2 == 0) && (lba == 0)) // CHS addressing
         {
@@ -176,8 +176,8 @@ int create_partition_record(u8 *partRec, int unk1, u32 partLen, int isExtPart, i
     partRec[0xC] = partLen;
     partRec[0xD] = partLen >>  8;
     partRec[0xE] = partLen >> 16;
-    partRec[0xF] = partLen >> 24;    
-    
+    partRec[0xF] = partLen >> 24;
+
     return 0;
 }
 
@@ -209,7 +209,7 @@ int DoFdisk(SceUID fd)
 {
 	int i, p;
 	int numblocks;
-	
+
 	if (numheads != 0 && numsectors != 0)
 	{
 		totalsectors = numheads*numsectors; // totalsectors
@@ -280,7 +280,7 @@ int DoFdisk(SceUID fd)
 
 		p += partitions[i]._4;
 	}
-	
+
 	return 0;
 }
 
@@ -291,28 +291,29 @@ void Usage()
 
 }
 
+int look_ctype_table(int unk);
 int pspLflashFdiskStartFdisk(int argc, char *argv[])
 {
 	int i, res;
 	SceUID fd;
 
 	Kprintf("Lflash fdisk 0.1\n");
-	
+
 	InitVars();
-	
+
 	if (argc <= 1)
 	{
 		Usage();
 		return -1;
-	}	
+	}
 
 	for (i = 1; i < argc-1; i++)
-	{	
+	{
 		if (argv[i][0] == '-')
 		{
 			/*if (strcmp(argv[i], "-debug") == 0)
 			{
-				debug = 1;			
+				debug = 1;
 			}
 			else if (strcmp(argv[i], "-lba") == 0)
 			{
@@ -321,7 +322,7 @@ int pspLflashFdiskStartFdisk(int argc, char *argv[])
 			else */if (strcmp(argv[i], "-H") == 0)
 			{
 				i++;
-				
+
 				if (i == (argc-1))
 				{
 					Usage();
@@ -382,7 +383,7 @@ int pspLflashFdiskStartFdisk(int argc, char *argv[])
 
 	res = DoFdisk(fd);
 	sceIoClose(fd);
-	
+
 	return res;
 }
 
