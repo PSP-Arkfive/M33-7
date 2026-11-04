@@ -44,8 +44,6 @@ const int module_sdk_version = 0x03060010;
 	sceIoClose(fd);
 }*/
 
-int sceKernelSetQTGP3(void *data);
-
 SceUID mount_thread = -1;
 SceUID umdfd = -1;
 int mounted = 0, cso = 0;
@@ -153,7 +151,7 @@ int OpenUmdImage()
 
 	ClearCaches();
 
-	sceKernelSetQTGP3((void *)dummy_umd_id);
+	sceKernelSetQTGP3(dummy_umd_id);
 
 	return 0;
 }
