@@ -23,7 +23,7 @@ static int (* aLinkLibEntries)(SceLibraryStubTable *imports, SceSize size, int u
 void ClearCaches()
 {
 	sceKernelIcacheInvalidateAll();
-	sceKernelDcacheWritebackInvalidateAll();	
+	sceKernelDcacheWritebackInvalidateAll();
 }
 
 LibraryData *FindLib(const char *lib)
@@ -63,10 +63,10 @@ int aLinkLibEntriesPatched(SceLibraryStubTable *imports, SceSize size)
 		{
 			lle_handler(import);
 		}
-		
+
 		LibraryData *data = FindLib(import->libname);
 		if (data)
-		{		
+		{
 			for (int j = 0; j < import->stubcount; j++)
 			{
 				u32 nnid = FindNewNid(data, import->nidtable[j]);
@@ -85,7 +85,7 @@ int aLinkLibEntriesPatched(SceLibraryStubTable *imports, SceSize size)
 
 void PatchLoadCore()
 {
-	SceModule2 *mod = sceKernelFindModuleByName("sceLoaderCore");
+	SceModule *mod = sceKernelFindModuleByName("sceLoaderCore");
 	u32 text_addr = mod->text_addr;
 
 	// Nids resolver patch
