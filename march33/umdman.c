@@ -16,8 +16,8 @@ int (* iecallback)(int id, void *arg, int unk);
 
 #define NOP	0x00000000
 
-#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a); 
-#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a); 
+#define MAKE_JUMP(a, f) _sw(J_OPCODE | (((u32)(f) & 0x0ffffffc) >> 2), a);
+#define MAKE_CALL(a, f) _sw(JAL_OPCODE | (((u32)(f) >> 2)  & 0x03ffffff), a);
 #define MAKE_SYSCALL(a, n) _sw(SC_OPCODE | (n << 6), a);
 #define JUMP_TARGET(x) (0x80000000 | ((x & 0x03FFFFFF) << 2))
 
@@ -28,7 +28,7 @@ int (* iecallback)(int id, void *arg, int unk);
 int sceUmdManRegisterImposeCallBack(int id, void *callback)
 {
 	//Kprintf("Register Impose.\n");
-	
+
 	return 0;
 }
 
@@ -43,7 +43,7 @@ static void NotifyInsertEjectCallback(int u)
 	if (iecallback)
 	{
 		asm("lw $gp, 0(%0)\n" :: "r"(&gp_iecallback));
-		iecallback(id_iecallback, arg_iecallback, u);	
+		iecallback(id_iecallback, arg_iecallback, u);
 	}
 }
 
@@ -53,11 +53,11 @@ int sceUmdManRegisterInsertEjectUMDCallBack(int id, void *callback, void *arg)
 		return SCE_ERROR_ERRNO_ENOMEM;
 
 	//Kprintf("Register Insert UMD callback.\n");
-	
+
 	id_iecallback = id;
 	asm("sw $gp, 0(%0)\n" :: "r"(&gp_iecallback));
 	arg_iecallback = arg;
-	iecallback = callback;	
+	iecallback = callback;
 
 	u32 *mod =  (u32 *)sceKernelFindModuleByName("sceIsofs_driver");
 	u32 text_addr = *(mod+27);
@@ -68,10 +68,10 @@ int sceUmdManRegisterInsertEjectUMDCallBack(int id, void *callback, void *arg)
 	_sw(0x00001021, text_addr+0x43A4);
 
 	sceKernelDcacheWritebackAll();
-	sceKernelIcacheClearAll();	
+	sceKernelIcacheClearAll();
 
 	NotifyInsertEjectCallback(1);
-	
+
 	return 0;
 }
 
@@ -80,27 +80,27 @@ int sceUmdManUnRegisterInsertEjectUMDCallBack(int id)
 	if (id != id_iecallback)
 	{
 		return SCE_ERROR_ERRNO_ENOENT;
-	}	
+	}
 
 	id_iecallback = 0;
 	gp_iecallback = 0;
 	arg_iecallback = 0;
-	iecallback = NULL;	
-	
+	iecallback = NULL;
+
 	return 0;
 }
 
-int sceUmdMan_driver_60933ECD()
+int sceUmdManIsDvdDrive()
 {
 	//Kprintf("6093.\n");
-	
+
 	return 0;
 }
 
 int InitUmdMan()
 {
 	//Kprintf("UmdMan Inited.\n");
-	
+
 	return 0;
 }
 

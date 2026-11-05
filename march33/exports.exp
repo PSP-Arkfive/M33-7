@@ -12,27 +12,6 @@ PSP_EXPORT_VAR_HASH(module_info)
 # PSP_EXPORT_VAR_HASH(module_sdk_version)
 PSP_EXPORT_END
 
-PSP_EXPORT_START(sceUmd, 0x11, 0x0001)
-PSP_EXPORT_FUNC_NID(sceUmdSetDriveStatus, 0x0F4A9E65)
-PSP_EXPORT_FUNC_NID(sceUmdGetDiscInfo, 0xABD91854)
-PSP_EXPORT_FUNC_NID(sceUmdCheckMedium,0xAE62DEEA)
-PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStatCB, 0x29C25A46)
-PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStatWithTimer, 0x1177A45B)
-PSP_EXPORT_FUNC_NID(sceUmd_659587F7, 0x28D24A53)
-PSP_EXPORT_FUNC_NID(sceUmdGetErrorStatus, 0xE43C01A8)
-PSP_EXPORT_FUNC_NID(sceUmdReplaceProhibit, 0xC3CEF6A1)
-PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStat, 0x8EF08FCE)
-PSP_EXPORT_FUNC_NID(sceUmdSetErrorStatus, 0x5449D481)
-PSP_EXPORT_FUNC_NID(sceUmdRegisterUMDCallBack, 0x9E21A720)
-PSP_EXPORT_FUNC_NID(sceUmdUnRegisterUMDCallBack, 0x7C39550B)
-PSP_EXPORT_FUNC_NID(sceUmdActivate, 0xC6183D47)
-PSP_EXPORT_FUNC_NID(sceUmdReplacePermit, 0xD1D2B2EF)
-PSP_EXPORT_FUNC_NID(sceUmdGetDriveStatus, 0x85AAD97C)
-PSP_EXPORT_FUNC_NID(sceUmdDeactivate, 0xE83742BA)
-PSP_EXPORT_FUNC_NID(sceUmdClearDriveStatus, 0x9040A4BB)
-PSP_EXPORT_FUNC_NID(sceUmdCancelWaitDriveStat, 0x07264D81)
-PSP_EXPORT_END
-
 PSP_EXPORT_START(sceUmdUser, 0x11, 0x4001)
 PSP_EXPORT_FUNC_HASH(sceUmdGetErrorStat)
 PSP_EXPORT_FUNC_HASH(sceUmdGetDiscInfo)
@@ -51,18 +30,84 @@ PSP_EXPORT_FUNC_HASH(sceUmdReplacePermit)
 PSP_EXPORT_FUNC_HASH(sceUmdDeactivate)
 PSP_EXPORT_END
 
+PSP_EXPORT_START(sceUmd, 0x11, 0x0001)
+################################################################################
+# FW 3.70
+################################################################################
+PSP_EXPORT_FUNC_NID(sceUmdSetDriveStatus, 0x0F4A9E65)
+PSP_EXPORT_FUNC_NID(sceUmdGetDiscInfo, 0xABD91854)
+PSP_EXPORT_FUNC_NID(sceUmdCheckMedium,0xAE62DEEA)
+PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStatCB, 0x29C25A46)
+PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStatWithTimer, 0x1177A45B)
+PSP_EXPORT_FUNC_NID(sceUmd_659587F7, 0x28D24A53)
+PSP_EXPORT_FUNC_NID(sceUmdGetErrorStatus, 0xE43C01A8)
+PSP_EXPORT_FUNC_NID(sceUmdReplaceProhibit, 0xC3CEF6A1)
+PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStat, 0x8EF08FCE)
+PSP_EXPORT_FUNC_NID(sceUmdSetErrorStatus, 0x5449D481)
+PSP_EXPORT_FUNC_NID(sceUmdRegisterUMDCallBack, 0x9E21A720)
+PSP_EXPORT_FUNC_NID(sceUmdUnRegisterUMDCallBack, 0x7C39550B)
+PSP_EXPORT_FUNC_NID(sceUmdActivate, 0xC6183D47)
+PSP_EXPORT_FUNC_NID(sceUmdReplacePermit, 0xD1D2B2EF)
+PSP_EXPORT_FUNC_NID(sceUmdGetDriveStatus, 0x85AAD97C)
+PSP_EXPORT_FUNC_NID(sceUmdDeactivate, 0xE83742BA)
+PSP_EXPORT_FUNC_NID(sceUmdClearDriveStatus, 0x9040A4BB)
+PSP_EXPORT_FUNC_NID(sceUmdCancelWaitDriveStat, 0x07264D81)
+
+################################################################################
+# FW 5.00
+################################################################################
+PSP_EXPORT_FUNC_NID(sceUmdSetDriveStatus, 0x2B9A7E2E)
+PSP_EXPORT_FUNC_NID(sceUmdGetDiscInfo, 0x79EF9E56)
+PSP_EXPORT_FUNC_NID(sceUmdCheckMedium, 0xE9586C03)
+PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStatCB, 0x51C04466)
+PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStatWithTimer, 0xF7C6E4D9)
+PSP_EXPORT_FUNC_NID(sceUmd_659587F7, 0x10542751)
+PSP_EXPORT_FUNC_NID(sceUmdGetErrorStatus, 0x25B21837)
+PSP_EXPORT_FUNC_NID(sceUmdReplaceProhibit, 0x30DCD985)
+PSP_EXPORT_FUNC_NID(sceUmdWaitDriveStat, 0x8EF08FCE)
+PSP_EXPORT_FUNC_NID(sceUmdSetErrorStatus, 0x3DD57F37)
+PSP_EXPORT_FUNC_NID(sceUmdRegisterUMDCallBack, 0x6404E484)
+PSP_EXPORT_FUNC_NID(sceUmdUnRegisterUMDCallBack, 0x0743D00D)
+PSP_EXPORT_FUNC_NID(sceUmdActivate, 0xC6183D47)
+PSP_EXPORT_FUNC_NID(sceUmdReplacePermit, 0x36FF82F3)
+PSP_EXPORT_FUNC_NID(sceUmdGetDriveStatus, 0x0F2D9908)
+PSP_EXPORT_FUNC_NID(sceUmdDeactivate, 0xE83742BA)
+PSP_EXPORT_FUNC_NID(sceUmdClearDriveStatus, 0x085E7AFF)
+PSP_EXPORT_FUNC_NID(sceUmdCancelWaitDriveStat, 0xF8E0D303)
+PSP_EXPORT_END
+
 PSP_EXPORT_START(sceUmdMan_driver, 0x11, 0x0001)
+################################################################################
+# FW 3.70
+################################################################################
 PSP_EXPORT_FUNC_NID(sceUmdManUnRegisterImposeCallback, 0x0624CDD4)
 PSP_EXPORT_FUNC_NID(sceUmdManUnRegisterInsertEjectUMDCallBack, 0x7E72758D)
-PSP_EXPORT_FUNC_NID(sceUmdMan_driver_60933ECD, 0x620309A4)
+PSP_EXPORT_FUNC_NID(sceUmdManIsDvdDrive, 0x620309A4)
 PSP_EXPORT_FUNC_NID(sceUmdManRegisterInsertEjectUMDCallBack, 0x7CCDF632)
 PSP_EXPORT_FUNC_NID(sceUmdManRegisterImposeCallBack, 0x1291D91D)
+################################################################################
+# FW 5.00
+################################################################################
+PSP_EXPORT_FUNC_NID(sceUmdManUnRegisterImposeCallback, 0xB9B02322)
+PSP_EXPORT_FUNC_NID(sceUmdManUnRegisterInsertEjectUMDCallBack, 0x31699C86)
+PSP_EXPORT_FUNC_NID(sceUmdManIsDvdDrive, 0x988597A2)
+PSP_EXPORT_FUNC_NID(sceUmdManRegisterInsertEjectUMDCallBack, 0x63B69CE1)
+PSP_EXPORT_FUNC_NID(sceUmdManRegisterImposeCallBack, 0xB54D5BE8)
 PSP_EXPORT_END
 
 PSP_EXPORT_START(sceUmd9660_driver, 0x11, 0x0001)
+################################################################################
+# FW 3.70
+################################################################################
 PSP_EXPORT_FUNC_NID(sceUmd9660_driver_2C6C3F4C, 0xFBD990B1)
 PSP_EXPORT_FUNC_NID(sceUmd9660_driver_44EF600C, 0x548F2C04)
 PSP_EXPORT_FUNC_NID(sceUmd9660_driver_C7CD9CE8, 0xD582142B)
+################################################################################
+# FW 5.00
+################################################################################
+PSP_EXPORT_FUNC_NID(sceUmd9660_driver_2C6C3F4C, 0x7BF6DE7C)
+PSP_EXPORT_FUNC_NID(sceUmd9660_driver_44EF600C, 0xB15139FE)
+PSP_EXPORT_FUNC_NID(sceUmd9660_driver_C7CD9CE8, 0xDF36DCB6)
 PSP_EXPORT_END
 
 PSP_END_EXPORTS
